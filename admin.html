@@ -3,192 +3,388 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>【管理画面】一括削除機能付き</title>
+    <title>個人面談予約 システム管理画面</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <style>
-        body { font-family: sans-serif; background-color: #f0f4f8; padding: 20px; color: #333; }
-        .container { max-width: 850px; margin: 0 auto; background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        h2, h3 { color: #2b6cb0; border-bottom: 2px solid #2b6cb0; padding-bottom: 5px; }
-        .section { margin-bottom: 35px; background: #fdfdfd; padding: 15px; border: 1px solid #e2e8f0; border-radius: 8px; }
-        .flex-group { display: flex; gap: 10px; margin-bottom: 15px; align-items: center; flex-wrap: wrap; }
-        .header-wrap { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #2b6cb0; padding-bottom: 5px; margin-bottom: 10px; }
-        .header-wrap h3 { border: none; margin: 0; padding: 0; }
-        input[type="text"], input[type="date"], select { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem; }
-        button { padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        .add-btn { background: #319795; color: white; }
-        .del-btn { background: #e53e3e; color: white; padding: 4px 8px; font-size: 0.8rem; }
-        .clear-btn { background: #edf2f7; color: #e53e3e; border: 1px solid #e53e3e; padding: 4px 10px; font-size: 0.8rem; border-radius: 4px; }
-        .clear-btn:hover { background: #fff5f5; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #cbd5e0; padding: 10px; text-align: left; font-size: 0.9rem; }
-        th { background-color: #ebf8ff; }
-        .tag-list { display: flex; flex-wrap: wrap; gap: 8px; padding: 0; list-style: none; margin-top: 10px; }
-        .tag-item { background: #edf2f7; padding: 5px 10px; border-radius: 20px; display: flex; align-items: center; gap: 8px; font-size: 0.85rem; }
+        body { font-family: sans-serif; background-color: #f7fafc; padding: 20px; color: #2d3748; margin: 0; }
+        .container { max-width: 900px; margin: 0 auto; background: #fff; padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        h1 { color: #2b6cb0; border-bottom: 2px solid #ebf8ff; padding-bottom: 12px; margin-top: 0; }
+        h2 { color: #4a5568; font-size: 1.25rem; margin-top: 30px; border-left: 4px solid #3182ce; padding-left: 10px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media(max-width: 768px) { .grid { grid-template-columns: 1fr; } }
+        .card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 16px; border-radius: 8px; margin-bottom: 15px; }
+        .card-header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .card-header-flex h3 { margin: 0; font-size: 1.1rem; color: #4a5568; }
+        .form-inline { display: flex; gap: 10px; margin-top: 8px; margin-bottom: 8px; }
+        input[type="text"], input[type="date"], input[type="time"], select { padding: 8px; border: 1px solid #cbd5e0; border-radius: 4px; font-size: 0.95rem; }
+        button { padding: 8px 14px; background: #3182ce; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; }
+        button:hover { background: #2b6cb0; }
+        .btn-danger { padding: 6px 10px; background: #e53e3e; font-size: 0.85rem; }
+        .btn-danger:hover { background: #c53030; }
+        .btn-mini-danger { background: #fff5f5; color: #e53e3e; border: 1px solid #fed7d7; padding: 4px 8px; font-size: 0.8rem; border-radius: 4px; font-weight: bold; cursor: pointer; }
+        .btn-mini-danger:hover { background: #fff5f5; border-color: #e53e3e; color: #c53030; }
+        .btn-print { background: #48bb78; }
+        .btn-print:hover { background: #38a169; }
+        
+        .scroll-box { max-height: 300px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 6px; background: white; margin-top: 10px; }
+        table { width: 100%; border-collapse: collapse; background: white; }
+        th, td { border: 1px solid #e2e8f0; padding: 10px; text-align: left; font-size: 0.9rem; }
+        th { background: #ebf8ff; color: #2c5282; position: sticky; top: 0; z-index: 10; }
+        
+        .rule-box { background: #fffaf0; border: 1px solid #feebc8; color: #dd6b20; padding: 12px; border-radius: 6px; font-weight: bold; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .loading { text-align: center; font-size: 1.2rem; font-weight: bold; padding: 40px; color: #4a5568; }
+
+        /* 🖨️ 印刷用スタイル（修正版：表だけが綺麗に残るようにしました） */
+        @media print {
+            body { background: white; color: black; padding: 0; margin: 0; }
+            /* 画面上の大きな囲み枠や、他の設定フォームは全非表示 */
+            .container { box-shadow: none; padding: 0; max-width: 100%; }
+            h1, h2, .grid, .rule-box, .card-header-flex, .btn-danger { display: none !important; }
+            
+            /* 予約データが入っているカード自体は非表示にせず、背景や枠だけを印刷用にリセット */
+            .card-reserves { background: transparent !important; border: none !important; padding: 0 !important; margin: 0 !important; }
+            
+            /* 印刷専用のヘッダーを表示 */
+            .print-area-only { display: block !important; }
+            
+            /* スクロール制限を解除してすべての行を印刷可能に */
+            .scroll-box { max-height: none !important; overflow: visible !important; border: none !important; margin: 0 !important; }
+            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+            
+            /* 操作（取消）列を非表示にするための設定 */
+            th:last-child, td:last-child { display: none !important; }
+            
+            th, td { border: 1px solid #000 !important; color: #000 !important; padding: 8px !important; font-size: 10pt !important; }
+            th { background: #f2f2f2 !important; position: static !important; }
+        }
+        .print-area-only { display: none; }
     </style>
 </head>
 <body>
 
 <div id="app" class="container">
-    <h2>園の管理者用 設定・予約管理画面</h2>
-    <div v-if="loading" style="text-align:center;">データを読み込み中...</div>
+    <h1>⚙️ 個人面談予約 システム管理画面</h1>
+
+    <div v-if="loading" class="loading">
+        🔄 データを読み込み中...
+    </div>
+
     <div v-else>
-
-        <div class="section">
-            <h3>📝 クラスの設定</h3>
-            <div class="flex-group" style="margin-top: 15px;">
-                <input type="text" v-model="newClass" placeholder="例：くま組" style="flex:1;">
-                <button class="add-btn" @click="addMaster('クラス設定', newClass, () => newClass='')">追加</button>
+        <h2>⏱️ 予約自動締め切りルールの設定</h2>
+        <div class="card">
+            <div v-if="deadlineRule && deadlineRule.type !== 'none'" class="rule-box">
+                <span>📢 現在適用中のルール：{{ getRuleText(deadlineRule) }}</span>
+                <button class="btn-danger" @click="deleteRule">ルールを削除する</button>
             </div>
-            <ul class="tag-list">
-                <li v-for="c in classes" :key="c.id" class="tag-item">
-                    {{ c.name }} <button class="del-btn" style="border-radius:50%; padding:2px 6px;" @click="deleteRow('クラス設定', c.id)">×</button>
-                </li>
-            </ul>
+            <div v-else class="rule-box" style="background:#f7fafc; border-color:#e2e8f0; color:#718096;">
+                現在、締め切りルールは設定されていません（いつでも予約可能）。
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 15px;">
+                <div>
+                    <label style="font-weight:bold; display:block; margin-bottom:4px;">1. 締め切りパターンの選択</label>
+                    <select v-model="ruleForm.type" style="width: 100%; max-width: 500px;">
+                        <option value="none">-- 自動締め切りを利用しない --</option>
+                        <option value="fixedDate">指定日時に一斉締め切り（例：◯月◯日の20時に全受付終了）</option>
+                        <option value="daysAgo">面談日ごとに「◯日前」に自動締め切り</option>
+                        <option value="weekly">面談日ごとに「1週間前（7日前）」に自動締め切り</option>
+                    </select>
+                </div>
+
+                <div v-if="ruleForm.type === 'fixedDate'">
+                    <label style="font-weight:bold; display:block; margin-bottom:4px;">締め切る日付</label>
+                    <input type="date" v-model="ruleForm.days">
+                </div>
+
+                <div v-if="ruleForm.type === 'daysAgo'">
+                    <label style="font-weight:bold; display:block; margin-bottom:4px;">何日前に締め切るか</label>
+                    <input type="number" v-model="ruleForm.days" min="0" style="width:80px; padding:8px;"> 日前
+                </div>
+
+                <div v-if="ruleForm.type !== 'none'">
+                    <label style="font-weight:bold; display:block; margin-bottom:4px;">締め切り時間</label>
+                    <input type="time" v-model="ruleForm.time">
+                </div>
+
+                <div>
+                    <button @click="saveRule" style="background:#2b6cb0; margin-top:5px;">💾 このルールで保存・適用する</button>
+                </div>
+            </div>
         </div>
 
-        <div class="section">
-            <div class="header-wrap">
-                <h3>📅 面談日の設定（期間でまとめて登録）</h3>
-                <button class="clear-btn" @click="clearMaster('日付設定', '登録されているすべての【面談日】')">⚠️ 日付をすべて一括削除</button>
+        <div class="grid">
+            <div>
+                <h2>🏫 クラスの管理</h2>
+                <div class="card">
+                    <div class="card-header-flex">
+                        <h3>クラス一覧</h3>
+                        <button v-if="classes.length > 0" class="btn-mini-danger" @click="clearMaster('クラス設定')">💥 一括削除</button>
+                    </div>
+                    <div class="form-inline">
+                        <input type="text" v-model="newClass" placeholder="例：さくら組" style="flex:1;">
+                        <button @click="addMaster('クラス設定', newClass, () => newClass='')">追加</button>
+                    </div>
+                    <div class="scroll-box">
+                        <table>
+                            <thead><tr><th>クラス名</th><th style="width:65px;">操作</th></tr></thead>
+                            <tbody>
+                                <tr v-for="c in classes" :key="c.id">
+                                    <td>{{ c.name }}</td>
+                                    <td><button class="btn-danger" @click="deleteRow('クラス設定', c.id)">削除</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <h2>📅 面談実施日の管理</h2>
+                <div class="card">
+                    <div class="card-header-flex">
+                        <h3>設定済み日程一覧</h3>
+                        <button v-if="dates.length > 0" class="btn-mini-danger" @click="clearMaster('日付設定')">💥 一括削除</button>
+                    </div>
+                    <div class="form-inline">
+                        <input type="date" v-model="dateRange.start">
+                        <span>～</span>
+                        <input type="date" v-model="dateRange.end">
+                        <button @click="addDateRange">範囲追加</button>
+                    </div>
+                    <div class="scroll-box">
+                        <table>
+                            <thead><tr><th>面談日</th><th style="width:65px;">操作</th></tr></thead>
+                            <tbody>
+                                <tr v-for="d in sortedDates" :key="d.id">
+                                    <td>{{ d.date }}</td>
+                                    <td><button class="btn-danger" @click="deleteRow('日付設定', d.id)">削除</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
-            <div class="flex-group">
-                <input type="date" v-model="dateStart">
-                <span>〜</span>
-                <input type="date" v-model="dateEnd">
-                <button class="add-btn" @click="addDateRange">期間を追加</button>
+
+            <div>
+                <h2>⏰ 時間枠の一括設定</h2>
+                <div class="card">
+                    <div class="card-header-flex">
+                        <h3>設定済み時間枠一覧</h3>
+                        <button v-if="times.length > 0" class="btn-mini-danger" @click="clearMaster('時間設定')">💥 一括削除</button>
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:6px;">
+                        <div class="form-inline">
+                            <label style="width:70px; font-size:0.85rem; font-weight:bold;">対象期間:</label>
+                            <input type="date" v-model="timeRange.start">
+                            <span>～</span>
+                            <input type="date" v-model="timeRange.end">
+                        </div>
+                        <div class="form-inline">
+                            <label style="width:70px; font-size:0.85rem; font-weight:bold;">時間枠:</label>
+                            <input type="text" v-model="newTime" placeholder="例：10:00～10:20" style="flex:1;">
+                            <button @click="addTimeRange">一括追加</button>
+                        </div>
+                    </div>
+
+                    <div class="scroll-box" style="max-height: 440px;">
+                        <table>
+                            <thead><tr><th>面談日</th><th>時間枠</th><th style="width:65px;">操作</th></tr></thead>
+                            <tbody>
+                                <tr v-for="t in sortedTimes" :key="t.id">
+                                    <td>{{ t.date }}</td>
+                                    <td>{{ t.time }}</td>
+                                    <td><button class="btn-danger" @click="deleteRow('時間設定', t.id)">削除</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
-            <ul class="tag-list">
-                <li v-for="d in dates" :key="d.id" class="tag-item">
-                    {{ formatDateLabel(d.name) }} <button class="del-btn" style="border-radius:50%; padding:2px 6px;" @click="deleteRow('日付設定', d.id)">×</button>
-                </li>
-            </ul>
         </div>
 
-        <div class="section">
-            <div class="header-wrap">
-                <h3>⏰ 時間枠の設定（選択した期間内の全日程に一括適用）</h3>
-                <button class="clear-btn" @click="clearMaster('時間設定', '登録されているすべての【時間枠】')">⚠️ 時間枠をすべて一括削除</button>
+        <h2>📋 現在の予約確定データ（スプレッドシート連動）</h2>
+        
+        <div class="print-area-only">
+            <h1 style="text-align:center; border:none; margin-bottom:5px; font-size:20pt;">個人面談 ご予約確定一覧表</h1>
+            <p style="text-align:right; font-size:10pt; margin:0 0 15px 0;">出力日時: {{ new Date().toLocaleString() }}</p>
+        </div>
+
+        <div class="card card-reserves">
+            <div class="card-header-flex">
+                <h3>予約一覧</h3>
+                <div style="display:flex; gap:10px;">
+                    <button v-if="reserves.length > 0" class="btn-print" @click="printPage">🖨️ 予約一覧を印刷する</button>
+                    <button v-if="reserves.length > 0" class="btn-mini-danger" @click="clearMaster('予約データ')">💥 予約データをすべて一括削除</button>
+                </div>
             </div>
-            <div class="flex-group">
-                <input type="date" v-model="timeStart">
-                <span>〜</span>
-                <input type="date" v-model="timeEnd">
-                <input type="text" v-model="newTime" placeholder="例：10:00 - 10:30" style="width:150px;">
-                <button class="add-btn" @click="addTimeRange">時間枠を一括追加</button>
-            </div>
-            
-            <div style="max-height: 300px; overflow-y: auto;">
+
+            <p v-if="reserves.length === 0" style="text-align:center; color:#718096; padding:20px;">現在、予約データはありません。</p>
+            <div v-else class="scroll-box" style="max-height: 400px;">
                 <table>
-                    <thead><tr><th>日付</th><th>時間枠</th><th>操作</th></tr></thead>
+                    <thead>
+                        <tr>
+                            <th>面談日時</th>
+                            <th>クラス</th>
+                            <th>園児氏名</th>
+                            <th>形式</th>
+                            <th>保護者メール</th>
+                            <th>受付時間</th>
+                            <th style="width:65px;">操作</th>
+                        </tr>
+                    </thead>
                     <tbody>
-                        <tr v-for="t in allTimes" :key="t.id">
-                            <td>{{ formatDateLabel(t.date) }}</td><td>{{ t.time }}</td>
-                            <td><button class="del-btn" @click="deleteRow('時間設定', t.id)">削除</button></td>
+                        <tr v-for="r in sortedReserves" :key="r.id">
+                            <td style="font-weight:bold; color:#2b6cb0;">{{ r.date }} {{ r.time }}</td>
+                            <td>{{ r.class }}</td>
+                            <td>{{ r.name }} 様</td>
+                            <td>{{ r.meetingType }}</td>
+                            <td>{{ r.email }}</td>
+                            <td style="font-size:0.8rem; color:#a0aec0;">{{ r.timestamp }}</td>
+                            <td><button class="btn-danger" @click="deleteRow('予約データ', r.id)">取消</button></td>
                         </tr>
                     </tbody>
                 </table>
             </div>
         </div>
-
-        <div class="section" style="border-color: #2b6cb0;">
-            <h3 style="color:#2b6cb0; border-bottom: none;">👥 保護者からの予約一覧</h3>
-            <table>
-                <thead>
-                    <tr><th>氏名</th><th>クラス</th><th>日付</th><th>時間</th><th>形式</th><th>メール</th><th>操作</th></tr>
-                </thead>
-                <tbody>
-                    <tr v-for="r in reserves" :key="r.id">
-                        <td><strong>{{ r.name }}</strong></td><td>{{ r.class }}</td><td>{{ formatDateLabel(r.date) }}</td><td>{{ r.time }}</td><td>{{ r.meetingType }}</td><td>{{ r.email }}</td>
-                        <td><button class="del-btn" @click="deleteRow('予約データ', r.id, true)">予約削除</button></td>
-                    </tr>
-                </tbody>
-            </table>
-            <p v-if="reserves.length === 0" style="text-align:center; padding:15px; color:#718096;">現在、入っている予約はありません。</p>
-        </div>
-
     </div>
 </div>
 
 <script>
-    const { createApp, ref, onMounted } = Vue;
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbzZrLTa9OdFZNL0fQPrknVjKnXW1byo2vj3X1Dn4iH0Z68oW2K9C1t9AoU7EXZr9yDH/exec"; // ★ここにURL
+    const { createApp, ref, computed, onMounted } = Vue;
+    
+    // 🛠️ GASのURLをご自身のURLに貼り換えてください
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbw_UZMPadeM1WZ8VwovbGMGAiopuqZ0J9y7T8tvCJ4YDAlF4IJQLkcUo2-jql1YloOH/exec"; 
 
     createApp({
         setup() {
             const loading = ref(true);
-            const classes = ref([]); const dates = ref([]); const allTimes = ref([]); const reserves = ref([]);
+            const classes = ref([]); const dates = ref([]); const times = ref([]); const reserves = ref([]);
+            const deadlineRule = ref(null);
+
             const newClass = ref('');
-            
-            const dateStart = ref(''); const dateEnd = ref('');
-            const timeStart = ref(''); const timeEnd = ref(''); const newTime = ref('');
+            const dateRange = ref({ start: '', end: '' });
+            const timeRange = ref({ start: '', end: '' });
+            const newTime = ref('');
+            const ruleForm = ref({ type: 'none', days: '0', time: '20:00' });
 
             const fetchData = async () => {
                 loading.value = true;
                 try {
                     const res = await fetch(GAS_URL); const json = await res.json();
-                    classes.value = json.classes; dates.value = json.dates; allTimes.value = json.times; reserves.value = json.reserves;
-                } catch (e) { alert("読込失敗"); } finally { loading.value = false; }
-            };
-            onMounted(fetchData);
-
-            const formatDateLabel = (dateVal) => {
-                if (!dateVal) return '';
-                const d = new Date(dateVal);
-                if (isNaN(d.getTime())) return dateVal;
-                const yyyy = d.getFullYear();
-                const mm = String(d.getMonth() + 1).padStart(2, '0');
-                const dd = String(d.getDate()).padStart(2, '0');
-                return `${yyyy}/${mm}/${dd}`;
+                    classes.value = json.classes || []; dates.value = json.dates || [];
+                    times.value = json.times || []; reserves.value = json.reserves || [];
+                    deadlineRule.value = json.deadlineRule || { type: 'none' };
+                    
+                    if (deadlineRule.value && deadlineRule.value.type !== 'none') {
+                        ruleForm.value.type = deadlineRule.value.type;
+                        ruleForm.value.days = deadlineRule.value.days;
+                        ruleForm.value.time = deadlineRule.value.time || "20:00";
+                    }
+                } catch (e) { alert("データの読み込みに失敗しました。"); }
+                finally { loading.value = false; }
             };
 
-            const addMaster = async (sheetName, val, callback) => {
-                if (!val.trim()) return;
+            const getRuleText = (rule) => {
+                if (!rule || rule.type === 'none') return "設定なし";
+                const timeStr = rule.time || "20:00";
+                if (rule.type === 'fixedDate') return `${rule.days.replace(/-/g, '/')} ${timeStr} に一斉締め切り`;
+                if (rule.type === 'daysAgo') return `各面談日の 【${rule.days}日前 の ${timeStr}】 に自動締め切り`;
+                if (rule.type === 'weekly') return `各面談日の 【1週間前（7日前） の ${timeStr}】 に自動締め切り`;
+                return "不明なルール";
+            };
+
+            const saveRule = async () => {
+                if (ruleForm.value.type !== 'none' && !ruleForm.value.days && ruleForm.value.type !== 'weekly') {
+                    alert("日付または日数を入力してください。"); return;
+                }
+                if (!confirm("この締め切りルールをシステムに適用しますか？")) return;
+                loading.value = true;
                 try {
-                    await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ type: "addMaster", targetSheet: sheetName, value: val.trim() })});
-                    callback(); fetchData();
-                } catch (e) { alert("追加失敗"); }
+                    await fetch(GAS_URL, {
+                        method: "POST",
+                        body: JSON.stringify({
+                            type: "saveDeadlineRule", deadlineType: ruleForm.value.type,
+                            deadlineDays: ruleForm.value.days, deadlineWday: "0", deadlineTime: ruleForm.value.time
+                        })
+                    });
+                    alert("💾 ルールを保存しました。保護者画面に即座に反映されます。");
+                    await fetchData();
+                } catch(e) { alert("保存に失敗しました。"); loading.value = false; }
             };
 
-            const dateStrToDate = (str) => new Date(str + "T00:00:00");
+            const deleteRule = async () => {
+                if (!confirm("現在の締め切りルールを解除しますか？\n解除すると期限に関わらずいつでも予約可能になります。")) return;
+                loading.value = true;
+                try {
+                    await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ type: "deleteDeadlineRule" }) });
+                    alert("🗑️ ルールを削除しました。");
+                    ruleForm.value = { type: 'none', days: '0', time: '20:00' };
+                    await fetchData();
+                } catch(e) { alert("削除に失敗しました。"); loading.value = false; }
+            };
+
+            const addMaster = async (target, value, callback) => {
+                if (!value.trim()) return;
+                loading.value = true;
+                try {
+                    await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ type: "addMaster", targetSheet: target, value: value.trim() }) });
+                    callback(); await fetchData();
+                } catch(e) { alert("追加に失敗しました。"); loading.value = false; }
+            };
 
             const addDateRange = async () => {
-                if (!dateStart.value || !dateEnd.value) { alert("開始日と終了日を選んでください"); return; }
-                if (dateStrToDate(dateStart.value) > dateStrToDate(dateEnd.value)) { alert("開始日と終了日の前後関係が正しくありません"); return; }
+                if (!dateRange.value.start || !dateRange.value.end) { alert("開始日と終了日を選択してください。"); return; }
+                loading.value = true;
                 try {
-                    await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ type: "addDateRange", startDate: dateStart.value, endDate: dateEnd.value })});
-                    dateStart.value = ''; dateEnd.value = ''; fetchData();
-                } catch (e) { alert("期間追加失敗"); }
+                    await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ type: "addDateRange", startDate: dateRange.value.start, endDate: dateRange.value.end }) });
+                    dateRange.value = { start: '', end: '' }; await fetchData();
+                } catch(e) { alert("登録に失敗しました。"); loading.value = false; }
             };
 
             const addTimeRange = async () => {
-                if (!timeStart.value || !timeEnd.value || !newTime.value.trim()) { alert("期間と時間枠をすべて入力してください"); return; }
-                if (dateStrToDate(timeStart.value) > dateStrToDate(timeEnd.value)) { alert("開始日と終了日の前後関係が正しくありません"); return; }
+                if (!timeRange.value.start || !timeRange.value.end || !newTime.value.trim()) { alert("期間と時間枠を入力してください。"); return; }
+                loading.value = true;
                 try {
-                    await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ type: "addTimeRange", startDate: timeStart.value, endDate: timeEnd.value, value: newTime.value.trim() })});
-                    newTime.value = ''; fetchData();
-                } catch (e) { alert("時間枠一括追加失敗"); }
+                    await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ type: "addTimeRange", startDate: timeRange.value.start, endDate: timeRange.value.end, value: newTime.value.trim() }) });
+                    newTime.value = ''; await fetchData();
+                } catch(e) { alert("登録に失敗しました。"); loading.value = false; }
             };
 
-            const deleteRow = async (sheetName, id, isReserve = false) => {
-                const msg = isReserve ? "この予約を削除しますか？" : "これを削除しますか？";
+            const deleteRow = async (target, id) => {
+                const msg = target === '予約データ' ? "この予約を取り消しますか？（スプレッドシートから行が削除されます）" : "本当に削除しますか？";
                 if (!confirm(msg)) return;
+                loading.value = true;
                 try {
-                    await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ type: "deleteRow", targetSheet: sheetName, id: id })});
-                    fetchData();
-                } catch (e) { alert("削除失敗"); }
+                    await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ type: "deleteRow", targetSheet: target, id: id }) });
+                    await fetchData();
+                } catch(e) { alert("削除に失敗しました."); loading.value = false; }
             };
 
-            // 🛠️【新機能】一括全削除の実行関数
-            const clearMaster = async (sheetName, displayName) => {
-                const msg = `${displayName}をすべて一括消去しますか？\n(この操作は取り消せません。スプレッドシートのデータもすべて空になります)`;
-                if (!confirm(msg)) return;
+            const clearMaster = async (target) => {
+                let displayName = "";
+                if(target === 'クラス設定') displayName = "クラス設定データ";
+                if(target === '日付設定') displayName = "登録されているすべての面談日";
+                if(target === '時間設定') displayName = "登録されているすべての時間枠";
+                if(target === '予約データ') displayName = "【これまでに受け付けたすべての予約データ】";
+                
+                if (!confirm(`⚠️ 警告 ⚠️\n\n${displayName}を【すべて一括削除】しますか？\nこの操作は取り消せません。`)) return;
+                loading.value = true;
                 try {
-                    await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ type: "clearMaster", targetSheet: sheetName })});
-                    fetchData();
-                } catch (e) { alert("一括削除に失敗しました。"); }
+                    await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ type: "clearMaster", targetSheet: target }) });
+                    alert(`🗑️ ${displayName}をすべて削除しました。`);
+                    await fetchData();
+                } catch(e) { alert("一括削除に失敗しました。"); loading.value = false; }
             };
 
-            return { loading, classes, dates, allTimes, reserves, newClass, dateStart, dateEnd, timeStart, timeEnd, newTime, addMaster, addDateRange, addTimeRange, deleteRow, formatDateLabel, clearMaster };
+            const printPage = () => {
+                window.print();
+            };
+
+            const sortedDates = computed(() => [...dates.value].sort((a,b) => a.date.localeCompare(b.date)));
+            const sortedTimes = computed(() => [...times.value].sort((a,b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time)));
+            const sortedReserves = computed(() => [...reserves.value].sort((a,b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time)));
+
+            onMounted(fetchData);
+
+            return { loading, classes, dates, times, reserves, deadlineRule, newClass, dateRange, timeRange, newTime, ruleForm, getRuleText, saveRule, deleteRule, addMaster, addDateRange, addTimeRange, deleteRow, clearMaster, printPage, sortedDates, sortedTimes, sortedReserves };
         }
     }).mount('#app');
 </script>

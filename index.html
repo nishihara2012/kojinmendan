@@ -6,162 +6,258 @@
     <title>個人面談のご予約</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <style>
-        body { font-family: sans-serif; background-color: #f7f9fa; padding: 20px; color: #333; }
-        .container { max-width: 500px; margin: 0 auto; background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        h2 { text-align: center; color: #ff8c00; margin-bottom: 25px; }
-        .form-group { margin-bottom: 20px; }
-        label { display: block; font-weight: bold; margin-bottom: 8px; }
-        select, input[type="text"], input[type="email"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 1rem; }
-        .radio-group { display: flex; gap: 20px; }
-        .time-slots { display: flex; flex-direction: column; gap: 10px; }
-        .time-slot { display: flex; justify-content: space-between; padding: 12px; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; }
-        .time-slot.available:hover { border-color: #ff8c00; background-color: #fff9f2; }
-        .time-slot.selected { border-color: #ff8c00; background-color: #ff8c00; color: white; }
-        .time-slot.booked { background-color: #eee; color: #aaa; cursor: not-allowed; }
-        .submit-btn { width: 100%; padding: 14px; background-color: #ff8c00; color: white; border: none; border-radius: 6px; font-size: 1.1rem; font-weight: bold; cursor: pointer; margin-top: 20px; }
-        .submit-btn:disabled { background-color: #ccc; cursor: not-allowed; }
+        body { font-family: sans-serif; background-color: #f7fafc; padding: 16px; color: #2d3748; margin: 0; }
+        .container { max-width: 550px; margin: 20px auto; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        h2 { color: #2b6cb0; text-align: center; margin-top: 0; margin-bottom: 20px; border-bottom: 2px solid #ebf8ff; padding-bottom: 10px; }
+        .form-group { margin-bottom: 18px; }
+        label { display: block; margin-bottom: 6px; font-weight: bold; font-size: 0.95rem; }
+        input[type="text"], input[type="email"], select { width: 100%; padding: 10px; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 1rem; box-sizing: border-box; }
+        input[type="text"]:focus, input[type="email"]:focus, select:focus { outline: none; border-color: #3182ce; background-color: #f7fafc; }
+        .radio-group { display: flex; gap: 15px; margin-top: 5px; }
+        .radio-label { display: flex; align-items: center; gap: 5px; font-weight: normal; cursor: pointer; }
+        .submit-btn { width: 100%; padding: 12px; background: #3182ce; color: white; border: none; border-radius: 6px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: background 0.2s; margin-top: 10px; }
+        .submit-btn:hover { background: #2b6cb0; }
+        .submit-btn:disabled { background: #cbd5e0; cursor: not-allowed; }
+        .loading-text { text-align: center; color: #4a5568; font-weight: bold; padding: 40px 0; }
+        .notice-box { background: #ebf8ff; border-left: 4px solid #3182ce; padding: 12px; border-radius: 4px; font-size: 0.85rem; margin-bottom: 20px; line-height: 1.5; }
+        .closed-message { background: #fff5f5; border: 1px solid #fed7d7; color: #c53030; padding: 15px; border-radius: 6px; text-align: center; font-weight: bold; margin-bottom: 20px; }
     </style>
 </head>
 <body>
 
 <div id="app" class="container">
-    <h2>個人面談のご予約</h2>
-    <div v-if="loading" style="text-align:center;">最新の空き状況を読み込み中...</div>
+    <h2>🤝 個人面談のご予約</h2>
+
+    <div v-if="loading" class="loading-text">
+        🔄 最新の空き状況を読み込み中...
+    </div>
+
     <div v-else>
-        
-        <div class="form-group">
-            <label>1. お子様のお名前を入力してください</label>
-            <input type="text" v-model="childName" placeholder="例：園児 太郎">
+        <div v-if="isAllClosed" class="closed-message">
+            📢 今回の個人面談の予約受付は、設定された締め切り日時を過ぎたため、すべて終了いたしました。
         </div>
 
-        <div class="form-group">
-            <label>2. クラスを選択してください</label>
-            <select v-model="selectedClass">
-                <option value="" disabled>選択してください</option>
-                <option v-for="c in classes" :key="c.id" :value="c.name">{{ c.name }}</option>
-            </select>
-        </div>
+        <div v-else>
+            <div class="notice-box">
+                ※ 定員に達した時間枠や、締め切り期限を過ぎた日程から自動的に受付終了となります。<br>
+                ※ 1人の園児につきご予約は1回までとなります。<br>
+                ※ ご都合の良い日時を選択し、最後に「予約を確定する」を押してください。
+            </div>
 
-        <div class="form-group">
-            <label>3. 希望日を選択してください</label>
-            <select v-model="selectedDate" @change="selectedSlot = null">
-                <option value="" disabled>日付を選択してください</option>
-                <option v-for="d in dates" :key="d.id" :value="d.name">
-                    {{ formatDateLabel(d.name) }}
-                </option>
-            </select>
-        </div>
+            <div class="form-group">
+                <label>所属クラス <span style="color:red;">*</span></label>
+                <select v-model="selectedClass">
+                    <option value="">-- クラスを選択してください --</option>
+                    <option v-for="c in classes" :key="c.id" :value="c.name || c['クラス'] || c">
+                        {{ c.name || c['クラス'] || c }}
+                    </option>
+                </select>
+            </div>
 
-        <div class="form-group" v-if="selectedDate">
-            <label>4. 希望時間を選択してください（各枠先着1名）</label>
-            <div class="time-slots">
-                <div v-for="slot in filteredSlots" :key="slot.time" class="time-slot"
-                     :class="{ 'booked': slot.isBooked, 'selected': selectedSlot === slot.time, 'available': !slot.isBooked }"
-                     @click="!slot.isBooked && (selectedSlot = slot.time)">
-                    <span>{{ slot.time }}</span>
-                    <span>{{ slot.isBooked ? '× 満席' : (selectedSlot === slot.time ? '選択中' : '◯ 予約可能') }}</span>
+            <div class="form-group">
+                <label>園児氏名 <span style="color:red;">*</span></label>
+                <input type="text" v-model="childName" placeholder="例：ひびき 太郎">
+            </div>
+
+            <div class="form-group">
+                <label>面談希望日 <span style="color:red;">*</span></label>
+                <select v-model="selectedDate" @change="selectedTime = ''">
+                    <option value="">-- 日付を選択してください --</option>
+                    <option v-for="d in availableDates" :key="d.id" :value="formatToHyphenDate(d.date || d['日付'] || d)">
+                        {{ formatDateLabel(d.date || d['日付'] || d) }}
+                    </option>
+                </select>
+                <p v-if="availableDates.length === 0" style="color: red; font-size: 0.85rem; margin-top: 5px;">
+                    ⚠️ 現在、予約可能な面談日はありません（すべて締め切りを過ぎています）。
+                </p>
+            </div>
+
+            <div class="form-group">
+                <label>時間枠 <span style="color:red;">*</span></label>
+                <select v-model="selectedTime" :disabled="!selectedDate">
+                    <option value="">-- 先に日付を選択してください --</option>
+                    <option v-for="t in availableTimes" :key="t.id" :value="t.time" :disabled="t.disabled">
+                        {{ t.time }} {{ t.disabled ? '（× 満席）' : '（◯ 空きあり）' }}
+                    </option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>面談形式 <span style="color:red;">*</span></label>
+                <div class="radio-group">
+                    <label class="radio-label">
+                        <input type="radio" v-model="meetingType" value="対面"> 対面での面談
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" v-model="meetingType" value="オンライン"> オンライン（Zoom等）
+                    </label>
                 </div>
             </div>
-            <p v-if="filteredSlots.length === 0" style="color:#718096;">この日の面談枠は設定されていません。</p>
-        </div>
 
-        <div class="form-group">
-            <label>5. 面談形式を選択してください</label>
-            <div class="radio-group">
-                <label><input type="radio" value="対面" v-model="meetingType"> 対面</label>
-                <label><input type="radio" value="Zoom" v-model="meetingType"> Zoom</label>
+            <div class="form-group">
+                <label>保護者様メールアドレス <span style="color:red;">*</span></label>
+                <input type="email" v-model="email" placeholder="例：parent@example.com">
             </div>
-        </div>
 
-        <div class="form-group">
-            <label>6. リマインドを受け取るメールアドレス</label>
-            <input type="email" v-model="email" placeholder="例：example@mail.com">
+            <button class="submit-btn" :disabled="loading || availableDates.length === 0" @click="submitReservation">
+                🔒 この内容で予約を確定する
+            </button>
         </div>
-
-        <button class="submit-btn" :disabled="!isFormValid || submitting" @click="submitReservation">
-            {{ submitting ? '送信中...' : '予約を確定する' }}
-        </button>
     </div>
 </div>
 
 <script>
     const { createApp, ref, computed, onMounted } = Vue;
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbzZrLTa9OdFZNL0fQPrknVjKnXW1byo2vj3X1Dn4iH0Z68oW2K9C1t9AoU7EXZr9yDH/exec"; // ★ここにURL
+    
+    // 🛠️ GASのURLを必ずご自身のURLに書き換えてください！
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbw_UZMPadeM1WZ8VwovbGMGAiopuqZ0J9y7T8tvCJ4YDAlF4IJQLkcUo2-jql1YloOH/exec"; 
 
     createApp({
         setup() {
             const loading = ref(true);
-            const submitting = ref(false);
+            const classes = ref([]); const dates = ref([]); const allTimes = ref([]); const reserves = ref([]);
+            const deadlineRule = ref(null);
             
-            const childName = ref('');
-            const selectedClass = ref('');
-            const selectedDate = ref('');
-            const selectedSlot = ref(null);
-            const meetingType = ref('対面');
-            const email = ref('');
+            const selectedClass = ref(''); const childName = ref(''); const selectedDate = ref('');
+            const selectedTime = ref(''); const meetingType = ref('対面'); const email = ref('');
 
-            const classes = ref([]);
-            const dates = ref([]);
-            const allTimes = ref([]);
-            const reserves = ref([]);
-
-            const init = async () => {
-                try {
-                    const res = await fetch(GAS_URL);
-                    const json = await res.json();
-                    classes.value = json.classes;
-                    dates.value = json.dates;
-                    allTimes.value = json.times;
-                    reserves.value = json.reserves;
-                } catch (e) { alert("データの取得に失敗しました。"); }
-                finally { loading.value = false; }
+            const getJstNowString = () => {
+                const now = new Date();
+                const jstTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
+                const yyyy = jstTime.getUTCFullYear();
+                const mm = String(jstTime.getUTCMonth() + 1).padStart(2, '0');
+                const dd = String(jstTime.getUTCDate()).padStart(2, '0');
+                const hh = String(jstTime.getUTCHours()).padStart(2, '0');
+                const mi = String(jstTime.getUTCMinutes()).padStart(2, '0');
+                return `${yyyy}-${mm}-${dd} ${hh}:${mi}`;
             };
-            onMounted(init);
 
-            // 💡長い日時表記を「yyyy/MM/dd」の形に綺麗に変換する関数
             const formatDateLabel = (dateVal) => {
                 if (!dateVal) return '';
                 const d = new Date(dateVal);
-                if (isNaN(d.getTime())) return dateVal;
+                if (isNaN(d.getTime())) return dateVal.toString().replace(/-/g, '/').split(' ')[0];
+                return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`;
+            };
+
+            const formatToHyphenDate = (dateVal) => {
+                return formatDateLabel(dateVal).replace(/\//g, '-');
+            };
+
+            const calcShiftedDateStr = (baseDateStr, daysToShift) => {
+                const parts = baseDateStr.split('-');
+                if (parts.length !== 3) return baseDateStr;
+                const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+                d.setDate(d.getDate() + daysToShift);
                 const yyyy = d.getFullYear();
                 const mm = String(d.getMonth() + 1).padStart(2, '0');
                 const dd = String(d.getDate()).padStart(2, '0');
-                return `${yyyy}/${mm}/${dd}`;
+                return `${yyyy}-${mm}-${dd}`;
             };
 
-            // 選択した日付に紐づく時間だけを抽出し、満席チェックを行うコード
-            const filteredSlots = computed(() => {
-                if (!selectedDate.value) return [];
-                return allTimes.value
-                    .filter(t => t.date === selectedDate.value)
-                    .map(t => {
-                        const isBooked = reserves.value.some(r => r.date === selectedDate.value && r.time === t.time);
-                        return { time: t.time, isBooked: isBooked };
-                    });
+            const fetchData = async () => {
+                try {
+                    const res = await fetch(GAS_URL); const json = await res.json();
+                    classes.value = json.classes || []; dates.value = json.dates || [];
+                    allTimes.value = json.times || []; reserves.value = json.reserves || [];
+                    deadlineRule.value = json.deadlineRule || { type: 'none' };
+                } catch (e) {
+                    alert("最新データの読み込みに失敗しました。");
+                } finally { loading.value = false; }
+            };
+            onMounted(fetchData);
+
+            const isTargetClosed = (faceToFaceDateStr) => {
+                if (!deadlineRule.value || deadlineRule.value.type === 'none') return false;
+                const jstNowStr = getJstNowString();
+                const type = deadlineRule.value.type;
+                const rTime = (deadlineRule.value.time || "20:00").padStart(5, '0');
+
+                if (type === 'fixedDate') {
+                    let limitDateStr = deadlineRule.value.days;
+                    if (!limitDateStr) return false;
+                    const cleanedLimitDate = formatToHyphenDate(limitDateStr);
+                    const limitDateTimeStr = `${cleanedLimitDate} ${rTime}`;
+                    return jstNowStr >= limitDateTimeStr;
+                }
+                if (!faceToFaceDateStr) return false;
+                const cleanedFaceDate = formatToHyphenDate(faceToFaceDateStr);
+
+                if (type === 'daysAgo') {
+                    const days = Number(deadlineRule.value.days) || 0;
+                    const limitDateStr = calcShiftedDateStr(cleanedFaceDate, -days);
+                    const limitDateTimeStr = `${limitDateStr} ${rTime}`;
+                    return jstNowStr >= limitDateTimeStr;
+                }
+                if (type === 'weekly') {
+                    const limitDateStr = calcShiftedDateStr(cleanedFaceDate, -7);
+                    const limitDateTimeStr = `${limitDateStr} ${rTime}`;
+                    return jstNowStr >= limitDateTimeStr;
+                }
+                return false;
+            };
+
+            const isAllClosed = computed(() => {
+                if (!deadlineRule.value || deadlineRule.value.type !== 'fixedDate') return false;
+                return isTargetClosed('');
             });
 
-            const isFormValid = computed(() => {
-                return childName.value.trim() && selectedClass.value && selectedDate.value && selectedSlot.value && email.value.trim();
+            const availableDates = computed(() => {
+                if (isAllClosed.value) return [];
+                return dates.value.filter(d => {
+                    const rawDate = d.date || d['日付'] || d;
+                    return !isTargetClosed(formatToHyphenDate(rawDate));
+                });
+            });
+
+            const availableTimes = computed(() => {
+                if (!selectedDate.value) return [];
+                const dayTimes = allTimes.value.filter(t => formatToHyphenDate(t.date || t['日付'] || t) === selectedDate.value);
+                return dayTimes.map(t => {
+                    const timeStr = t.time || t['時間'] || t['時間枠'] || '';
+                    const isBooked = reserves.value.some(r => formatToHyphenDate(r.date || r['日付']) === selectedDate.value && (r.time || r['時間']) === timeStr);
+                    return { id: t.id, time: timeStr, disabled: isBooked };
+                });
             });
 
             const submitReservation = async () => {
-                submitting.value = true;
+                const cleanedName = childName.value.trim();
+                if (!selectedClass.value || !cleanedName || !selectedDate.value || !selectedTime.value || !email.value.trim()) {
+                    alert("必須項目をすべて入力してください。"); return;
+                }
+                if (isTargetClosed(selectedDate.value)) {
+                    alert("申し訳ありません。期限を過ぎたため予約できません。"); fetchData(); return;
+                }
+
+                // 🛑 【新規】ブラウザ側での二重予約のチェック（同クラス、同名）
+                const isAlreadyReserved = reserves.value.some(r => {
+                    const rClass = r.class || r['クラス'] || '';
+                    const rName = r.name || r['氏名'] || r['園児氏名'] || '';
+                    return rClass === selectedClass.value && rName === cleanedName;
+                });
+                if (isAlreadyReserved) {
+                    alert(`⚠️ すでに「${selectedClass.value}」の「${cleanedName}」様で面談予約が登録されています。\n1人の園児につきご予約は1回までとなります。変更等の場合は園までご連絡ください。`);
+                    return;
+                }
+
+                if (!confirm("この内容で予約を確定しますか？")) return;
+                loading.value = true;
                 try {
-                    const res = await fetch(GAS_URL, {
+                    const response = await fetch(GAS_URL, {
                         method: "POST",
                         body: JSON.stringify({
-                            type: "reserve", childName: childName.value, selectedClass: selectedClass.value,
-                            date: selectedDate.value, timeSlot: selectedSlot.value, meetingType: meetingType.value, email: email.value
+                            type: "reserve", selectedClass: selectedClass.value, childName: cleanedName,
+                            date: formatDateLabel(selectedDate.value), timeSlot: selectedTime.value, meetingType: meetingType.value, email: email.value.trim()
                         })
                     });
-                    const result = await res.json();
-                    if (result.status === "success") { alert("予約が確定しました！"); window.location.reload(); }
-                    else { alert(result.message); window.location.reload(); }
-                } catch (e) { alert("通信エラーが発生しました"); }
-                finally { submitting.value = false; }
+                    const result = await response.json();
+                    if (result.status === "success") {
+                        alert("🎉 ご予約が確定しました！");
+                        childName.value = ''; selectedDate.value = ''; selectedTime.value = ''; email.value = ''; fetchData();
+                    } else { alert(result.message || "予約に失敗しました。"); fetchData(); }
+                } catch (e) { alert("通信エラーが発生しました。"); } finally { loading.value = false; }
             };
 
-            return { loading, submitting, childName, selectedClass, selectedDate, selectedSlot, meetingType, email, classes, dates, filteredSlots, isFormValid, submitReservation, formatDateLabel };
+            return { loading, classes, dates, selectedClass, childName, selectedDate, selectedTime, meetingType, email, availableDates, availableTimes, isAllClosed, submitReservation, formatDateLabel, formatToHyphenDate };
         }
     }).mount('#app');
 </script>
