@@ -10,8 +10,8 @@
         h1 { text-align: center; color: #2c3e50; margin-bottom: 25px; font-size: 1.8rem; }
         
         .admin-workspace { display: flex; gap: 25px; align-items: flex-start; max-width: 1400px; margin: 0 auto; }
-        .column-left { flex: 1; min-width: 450px; display: flex; flex-direction: column; gap: 20px; }
-        .column-right { flex: 1.2; min-width: 550px; position: sticky; top: 20px; }
+        .column-left { flex: 1; min-width: 420px; display: flex; flex-direction: column; gap: 20px; }
+        .column-right { flex: 1.5; min-width: 600px; position: sticky; top: 20px; }
 
         .card { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; }
         .card h2 { margin-top: 0; border-left: 4px solid #3498db; padding-left: 10px; font-size: 1.15rem; color: #2c3e50; margin-bottom: 15px; }
@@ -39,6 +39,27 @@
 
         .login-overlay { text-align: center; max-width: 400px; margin: 100px auto; }
         .sync-banner { text-align: center; padding: 15px; background: #eaf4ff; color: #2b6cb0; font-weight: bold; border-radius: 6px; margin-bottom: 20px; }
+        
+        /* 印刷専用のタイトルヘッダー（通常画面では隠す） */
+        .print-header { display: none; }
+
+        /* =================================================================
+           🖨️ 印刷用（A4横などを想定した最適化スタイルの定義）
+           ================================================================= */
+        @media print {
+            body { background: #fff; color: #000; padding: 0; font-size: 11pt; }
+            h1, .sync-banner, .column-left, .login-overlay, .form-inline, th:last-child, td:last-child { display: none !important; }
+            .admin-workspace { display: block; max-width: 100%; margin: 0; }
+            .column-right.card { border: none; box-shadow: none; padding: 0; }
+            .column-right h2 { display: none !important; }
+            
+            /* 印刷時のみ「個人面談予定表」のタイトルを最上部に表示 */
+            .print-header { display: block; text-align: center; margin-bottom: 20px; font-size: 20pt; font-weight: bold; border-bottom: 2px solid #333; padding-bottom: 10px; }
+            
+            table { width: 100%; border: 1px solid #000; font-size: 10pt; }
+            th, td { border: 1px solid #000; padding: 8px; color: #000; }
+            th { background: #f0f0f0 !important; }
+        }
     </style>
 </head>
 <body>
@@ -166,6 +187,8 @@
         </div>
 
         <div class="column-right card">
+            <div class="print-header">個人面談予定表</div>
+
             <h2>📋 現在の面談予約一覧 （日付順） ({{ reserves.length }}件)</h2>
             <div class="form-inline" style="margin-bottom:15px;">
                 <button class="danger" @click="clearAllReservations">⚠️ 予約データを一括クリア（全削除）</button>
@@ -182,12 +205,12 @@
                             <th>園児氏名</th>
                             <th>形式</th>
                             <th>保護者メール</th>
-                            <th>操作</th>
+                            <th>備考</th> <th>操作</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr v-if="reserves.length === 0">
-                            <td colspan="7" style="text-align:center; color:#a0aec0; padding:20px;">現在、予約データはありません。</td>
+                            <td colspan="8" style="text-align:center; color:#a0aec0; padding:20px;">現在、予約データはありません。</td>
                         </tr>
                         <tr v-for="r in reserves" :key="r.id">
                             <td>{{ formatDisplayDate(r.date) }}</td>
@@ -195,8 +218,8 @@
                             <td>{{ r.class }}</td>
                             <td>{{ r.name }}</td>
                             <td>{{ r.meetingType }}</td>
-                            <td style="font-size:0.8rem; max-width:120px; overflow:hidden; text-overflow:ellipsis;">{{ r.email }}</td>
-                            <td><button class="danger" style="padding:4px 8px; font-size:0.75rem;" @click="deleteReservationRow(r.id)">取消</button></td>
+                            <td style="font-size:0.8rem; max-width:110px; overflow:hidden; text-overflow:ellipsis;">{{ r.email }}</td>
+                            <td style="font-size:0.85rem; max-width:180px; white-space:pre-wrap; word-break:break-all;">{{ r.note || 'ー' }}</td> <td><button class="danger" style="padding:4px 8px; font-size:0.75rem;" @click="deleteReservationRow(r.id)">取消</button></td>
                         </tr>
                     </tbody>
                 </table>
@@ -209,7 +232,6 @@
 <script>
     const { createApp, ref, onMounted } = Vue;
     
-    // 🔗 ここにお使いの最新のGASウェブアプリURLを貼り付けてください
     const GAS_URL = "https://script.google.com/macros/s/AKfycbwrUDnTsj-j2RSwM9EZwAsq7yItA4moPzeFJmYyMjamCAUnukrRM1iYqtD7OeUfASFI/exec"; 
 
     createApp({
@@ -233,16 +255,13 @@
                 return dStr;
             };
 
-            // ✨【新機能】自動ログイン（セッションチェック）
             const checkSession = () => {
                 const sessionTime = localStorage.getItem("mendan_session_time");
                 if (sessionTime) {
                     const now = new Date().getTime();
-                    // 15分（15 * 60 * 1000ミリ秒）以内であればパスワードなしでログイン状態に
                     if (now - parseInt(sessionTime) < 15 * 60 * 1000) {
                         isAuthorized.value = true;
                         fetchData();
-                        // 有効期限をさらに15分引き伸ばす
                         localStorage.setItem("mendan_session_time", now.toString());
                         return true;
                     }
@@ -258,7 +277,6 @@
                     const json = await res.json();
                     if(json.status === "success") { 
                         isAuthorized.value = true; 
-                        // ✨ログイン成功時に現在時刻をパソコン（ブラウザ）に記憶
                         localStorage.setItem("mendan_session_time", new Date().getTime().toString());
                         await fetchData(); 
                     } 
@@ -267,7 +285,6 @@
                 finally { loading.value = false; }
             };
 
-            // ✨【新機能】任意でログアウトする処理
             const logout = () => {
                 localStorage.removeItem("mendan_session_time");
                 isAuthorized.value = false;
@@ -285,7 +302,6 @@
                     if(json.config) {
                         config.value = { ...config.value, ...json.config };
                     }
-                    // 操作が行われたので、セッション時間を更新して期限をさらに15分延長
                     if (isAuthorized.value) {
                         localStorage.setItem("mendan_session_time", new Date().getTime().toString());
                     }
@@ -347,7 +363,6 @@
             
             const printReservations = () => { window.print(); };
 
-            // 画面を開いた瞬間に、有効なセッションがあるか自動判定する
             onMounted(() => {
                 checkSession();
             });
