@@ -51,7 +51,7 @@
         <h2>🔒 管理者ログイン</h2>
         <p style="font-size:0.85rem; color:#718096;">設定された管理用パスワードを入力してください</p>
         <div style="display:flex; flex-direction:column; gap:10px;">
-            <input type="password" v-model="passwordInput" placeholder="パスワードを入力">
+            <input type="password" v-model="passwordInput" placeholder="パスワードを入力" @keyup.enter="login">
             <button @click="login">ログイン</button>
         </div>
     </div>
@@ -170,6 +170,7 @@
             <div class="form-inline" style="margin-bottom:15px;">
                 <button class="danger" @click="clearAllReservations">⚠️ 予約データを一括クリア（全削除）</button>
                 <button class="secondary" @click="printReservations">🖨️ 予約一覧を印刷する / PDF保存</button>
+                <button class="secondary" style="background:#718096; margin-left:auto;" @click="logout">🔓 ログアウト</button>
             </div>
             <div style="overflow-x:auto;">
                 <table id="reserve-table">
@@ -208,6 +209,7 @@
 <script>
     const { createApp, ref, onMounted } = Vue;
     
+    // 🔗 ここにお使いの最新のGASウェブアプリURLを貼り付けてください
     const GAS_URL = "https://script.google.com/macros/s/AKfycbwrUDnTsj-j2RSwM9EZwAsq7yItA4moPzeFJmYyMjamCAUnukrRM1iYqtD7OeUfASFI/exec"; 
 
     createApp({
@@ -231,16 +233,45 @@
                 return dStr;
             };
 
+            // ✨【新機能】自動ログイン（セッションチェック）
+            const checkSession = () => {
+                const sessionTime = localStorage.getItem("mendan_session_time");
+                if (sessionTime) {
+                    const now = new Date().getTime();
+                    // 15分（15 * 60 * 1000ミリ秒）以内であればパスワードなしでログイン状態に
+                    if (now - parseInt(sessionTime) < 15 * 60 * 1000) {
+                        isAuthorized.value = true;
+                        fetchData();
+                        // 有効期限をさらに15分引き伸ばす
+                        localStorage.setItem("mendan_session_time", now.toString());
+                        return true;
+                    }
+                }
+                return false;
+            };
+
             const login = async () => {
                 if(!passwordInput.value) return;
                 loading.value = true;
                 try {
                     const res = await fetch(`${GAS_URL}?action=checkPassword&password=${encodeURIComponent(passwordInput.value)}`);
                     const json = await res.json();
-                    if(json.status === "success") { isAuthorized.value = true; await fetchData(); } 
+                    if(json.status === "success") { 
+                        isAuthorized.value = true; 
+                        // ✨ログイン成功時に現在時刻をパソコン（ブラウザ）に記憶
+                        localStorage.setItem("mendan_session_time", new Date().getTime().toString());
+                        await fetchData(); 
+                    } 
                     else { alert("パスワードが違います。"); }
                 } catch(e) { alert("認証通信エラー"); }
                 finally { loading.value = false; }
+            };
+
+            // ✨【新機能】任意でログアウトする処理
+            const logout = () => {
+                localStorage.removeItem("mendan_session_time");
+                isAuthorized.value = false;
+                passwordInput.value = "";
             };
 
             const fetchData = async () => {
@@ -253,6 +284,10 @@
                     reserves.value = json.reserves || [];
                     if(json.config) {
                         config.value = { ...config.value, ...json.config };
+                    }
+                    // 操作が行われたので、セッション時間を更新して期限をさらに15分延長
+                    if (isAuthorized.value) {
+                        localStorage.setItem("mendan_session_time", new Date().getTime().toString());
                     }
                 } catch(e) { alert("データ取得エラー"); }
                 finally { loading.value = false; }
@@ -312,7 +347,12 @@
             
             const printReservations = () => { window.print(); };
 
-            return { loading, isAuthorized, passwordInput, classes, dates, times, reserves, newClassName, newDateValue, dateRange, timeBatch, config, newPasswordInput, login, addClass, deleteClass, clearClasses, addSingleDate, deleteDate, clearDates, generateDateRange, getTimesForDate, applyTimeBatch, deleteTimeRow, clearAllTimes, deleteReservationRow, clearAllReservations, saveSystemConfig, saveDeadlineOnly, printReservations, formatDisplayDate };
+            // 画面を開いた瞬間に、有効なセッションがあるか自動判定する
+            onMounted(() => {
+                checkSession();
+            });
+
+            return { loading, isAuthorized, passwordInput, classes, dates, times, reserves, newClassName, newDateValue, dateRange, timeBatch, config, newPasswordInput, login, logout, addClass, deleteClass, clearClasses, addSingleDate, deleteDate, clearDates, generateDateRange, getTimesForDate, applyTimeBatch, deleteTimeRow, clearAllTimes, deleteReservationRow, clearAllReservations, saveSystemConfig, saveDeadlineOnly, printReservations, formatDisplayDate };
         }
     }).mount('#app');
 </script>
