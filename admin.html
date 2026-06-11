@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>保育参加システム 管理画面</title>
+    <title>個人面談システム 管理画面</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <style>
         body { font-family: sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; }
         h1 { text-align: center; color: #2c3e50; margin-bottom: 25px; font-size: 1.8rem; }
         
-        /* 2カラムレイアウト */
         .admin-workspace { display: flex; gap: 25px; align-items: flex-start; max-width: 1400px; margin: 0 auto; }
         .column-left { flex: 1; min-width: 450px; display: flex; flex-direction: column; gap: 20px; }
         .column-right { flex: 1.2; min-width: 550px; position: sticky; top: 20px; }
@@ -44,7 +43,7 @@
 </head>
 <body>
 <div id="app">
-    <h1>🛠️ 保育参加システム 管理設定パネル</h1>
+    <h1>🛠️ 個人面談システム 管理設定パネル</h1>
 
     <div v-if="loading" class="sync-banner">🔄 データを同期中。少々お待ちください...</div>
 
@@ -82,16 +81,16 @@
             </div>
 
             <div class="card">
-                <h2>⏳ 予約締め切りルールの設定</h2>
+                <h2>⏳ 面談予約 締め切りルールの設定</h2>
                 <div style="display:flex; flex-direction:column; gap:8px; font-size:0.95rem;">
                     <label><input type="radio" v-model="config.deadlineType" value="none"> 締め切りなし（いつでも受付）</label>
                     <label><input type="radio" v-model="config.deadlineType" value="absolute"> 特定の日時で一斉締め切り</label>
                     <div v-if="config.deadlineType === 'absolute'" style="padding-left:20px;">
                         <input type="datetime-local" v-model="config.deadlineAbsolute">
                     </div>
-                    <label><input type="radio" v-model="config.deadlineType" value="relative"> 各参加日の〇日前に自動締め切り</label>
+                    <label><input type="radio" v-model="config.deadlineType" value="relative"> 各面談日の〇日前に自動締め切り</label>
                     <div v-if="config.deadlineType === 'relative'" style="padding-left:20px;">
-                        各参加日の <input type="number" v-model="config.deadlineDays" style="width:50px; padding:4px;"> 日前に自動締め切り
+                        各面談日の <input type="number" v-model="config.deadlineDays" style="width:50px; padding:4px;"> 日前に自動締め切り
                     </div>
                 </div>
                 <button @click="saveDeadlineOnly" style="margin-top:15px; width:100%;">⚙️ 締め切りルールを保存・適用する</button>
@@ -112,7 +111,7 @@
             </div>
 
             <div class="card">
-                <h2>📅 参加日設定</h2>
+                <h2>📅 面談実施日 設定</h2>
                 <div style="background:#f7fafc; padding:10px; border-radius:6px; margin-bottom:10px; border:1px solid #e2e8f0;">
                     <span style="font-size:0.85rem; font-weight:bold; color:#4a5568;">【範囲で一括追加】</span>
                     <div class="form-inline" style="margin-top:5px;">
@@ -134,7 +133,7 @@
             </div>
 
             <div class="card">
-                <h2>🕒 時間枠設定（日付連動）</h2>
+                <h2>🕒 面談時間枠設定（日付連動）</h2>
                 <div style="background:#ebf8ff; padding:12px; border-radius:6px; margin-bottom:15px; border:1px solid #bee3f8;">
                     <div class="form-inline" style="margin-bottom:5px;">
                         <span style="font-size:0.85rem; font-weight:bold; color:#2b6cb0;">対象期間:</span>
@@ -167,7 +166,7 @@
         </div>
 
         <div class="column-right card">
-            <h2>📋 現在の予約データ一覧 （面談日順） ({{ reserves.length }}件)</h2>
+            <h2>📋 現在の面談予約一覧 （日付順） ({{ reserves.length }}件)</h2>
             <div class="form-inline" style="margin-bottom:15px;">
                 <button class="danger" @click="clearAllReservations">⚠️ 予約データを一括クリア（全削除）</button>
                 <button class="secondary" @click="printReservations">🖨️ 予約一覧を印刷する / PDF保存</button>
@@ -176,7 +175,7 @@
                 <table id="reserve-table">
                     <thead>
                         <tr>
-                            <th>参加日</th>
+                            <th>実施日</th>
                             <th>時間枠</th>
                             <th>クラス</th>
                             <th>園児氏名</th>
@@ -187,7 +186,7 @@
                     </thead>
                     <tbody>
                         <tr v-if="reserves.length === 0">
-                            <td colspan="7" style="text-align:center; color:#a0aec0; padding:20px;">現在、入っている予約はありません。</td>
+                            <td colspan="7" style="text-align:center; color:#a0aec0; padding:20px;">現在、予約データはありません。</td>
                         </tr>
                         <tr v-for="r in reserves" :key="r.id">
                             <td>{{ formatDisplayDate(r.date) }}</td>
@@ -209,8 +208,7 @@
 <script>
     const { createApp, ref, onMounted } = Vue;
     
-    // 🔗 ここにお使いの最新のGASウェブアプリURLを貼り付けてください
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbw-zkI75jOOP9wB0xKakehFFEAAkj-_2txS2Dk44KSGNsToqiglZ9Ug2gwKhzKYR0t6/exec"; 
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbx29DnKwEUk-PzXgPxWXOcgwxkM5QtI8La7ug5AtVx9wW1JMwzEfhI-K3opZsHPwi7h/exec"; 
 
     createApp({
         setup() {
@@ -268,7 +266,7 @@
                     await fetchData();
                     alert(successMessage);
                 } catch(e) { 
-                    alert("設定反映に失敗しました。GASのURLが正しいか、またはスプレッドシートの構造を確認してください。"); 
+                    alert("設定反映に失敗しました。GASのURLが正しいか確認してください。"); 
                 } finally {
                     loading.value = false;
                 }
@@ -299,7 +297,6 @@
             const deleteReservationRow = (id) => { if(confirm("この予約を取り消しますか？")) postAction({ type:"deleteReservationRow", id }, "予約を取り消しました。"); };
             const clearAllReservations = () => { if(confirm("【警告】すべての予約データを完全に全削除します。よろしいですか？")) postAction({ type:"clearAllReservations" }, "予約データを全削除しました。"); };
 
-            // システム設定（パスワード・メール用）の保存
             const saveSystemConfig = () => { 
                 const sendConfig = { ...config.value };
                 if (newPasswordInput.value.trim()) {
@@ -309,7 +306,6 @@
                 newPasswordInput.value = "";
             };
 
-            // 締め切りルール単体の保存
             const saveDeadlineOnly = () => {
                 postAction({ type:"saveDeadline", config: config.value }, "締め切りルールを保存しました。");
             };

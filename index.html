@@ -3,64 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>保育参加・個人面談 予約システム</title>
+    <title>個人面談 予約システム</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <style>
-        body { font-family: sans-serif; background: #fffdf9; margin: 0; padding: 15px; color: #333; }
-        .container { max-width: 600px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 2px solid #fbd38d; }
-        h1 { text-align: center; color: #dd6b20; font-size: 1.5rem; margin-bottom: 20px; border-bottom: 2px dotted #fbd38d; padding-bottom: 10px; }
+        body { font-family: sans-serif; background: #f4f6f4; margin: 0; padding: 20px; color: #4a4a4a; }
+        .container { max-width: 600px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; }
+        h1 { text-align: center; color: #2d3748; font-size: 1.4rem; margin-bottom: 25px; font-weight: bold; letter-spacing: 0.05em; }
         
-        label { display: block; margin-top: 15px; font-weight: bold; color: #7b341e; font-size: 0.95rem; }
-        input[type="text"], input[type="email"], select, textarea { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #cbd5e0; border-radius: 6px; box-sizing: border-box; font-size: 1rem; background: #fffaf0; }
+        label { display: block; margin-top: 20px; font-weight: bold; color: #2d3748; font-size: 0.95rem; }
+        input[type="text"], input[type="email"], select, textarea { width: 100%; padding: 11px; margin-top: 6px; border: 1px solid #cbd5e0; border-radius: 6px; box-sizing: border-box; font-size: 0.95rem; background: #fafafa; color: #4a4a4a; transition: border-color 0.2s; }
+        input[type="text"]:focus, input[type="email"]:focus, select:focus, textarea:focus { border-color: #718096; outline: none; background: #fff; }
         
-        .grid-dates { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 150px)); gap: 10px; margin-top: 8px; justify-content: center; }
-        .btn-choice { border: 2px solid #cbd5e0; background: #fff; padding: 10px; border-radius: 8px; cursor: pointer; text-align: center; font-size: 0.95rem; font-weight: bold; transition: all 0.2s; }
-        .btn-choice:hover:not(:disabled) { border-color: #ed8936; background: #fffaf0; }
-        .btn-choice.selected { background: #ed8936; color: #fff; border-color: #dd6b20; }
-        .btn-choice:disabled { background: #e2e8f0; color: #a0aec0; cursor: not-allowed; border-color: #cbd5e0; }
+        .grid-dates { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; margin-top: 8px; }
+        .btn-choice { border: 1px solid #cbd5e0; background: #fff; padding: 12px 8px; border-radius: 6px; cursor: pointer; text-align: center; font-size: 0.9rem; color: #4a4a4a; transition: all 0.2s; }
+        .btn-choice:hover:not(:disabled) { border-color: #4a5568; background: #f7fafc; }
+        .btn-choice.selected { background: #4a6b58; color: #fff; border-color: #3b5445; }
+        .btn-choice:disabled { background: #edf2f7; color: #a0aec0; cursor: not-allowed; border-color: #e2e8f0; }
 
-        .time-box { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 55px; }
-        .status-txt { font-size: 0.75rem; font-weight: normal; margin-top: 3px; }
-        .status-txt.ok { color: #38a169; }
+        .time-box { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 45px; }
+        .status-txt { font-size: 0.75rem; margin-top: 3px; }
+        .status-txt.ok { color: #4a6b58; font-weight: bold; }
         .status-txt.full { color: #e53e3e; }
 
-        button.submit-btn { width: 100%; padding: 14px; background: #ecc94b; color: #7b341e; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; margin-top: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        button.submit-btn:hover:not(:disabled) { background: #dd6b20; color: #fff; }
+        button.submit-btn { width: 100%; padding: 14px; background: #4a6b58; color: #fff; border: none; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 30px; transition: background 0.2s; }
+        button.submit-btn:hover:not(:disabled) { background: #3b5445; }
         button.submit-btn:disabled { background: #cbd5e0; color: #a0aec0; cursor: not-allowed; }
 
-        .loading-banner { text-align: center; padding: 12px; background: #feebc8; color: #c05621; font-weight: bold; border-radius: 6px; margin-bottom: 15px; }
-        .notice-card { background: #fffaf0; border: 1px solid #feebc8; padding: 12px; border-radius: 6px; margin-bottom: 15px; font-size: 0.85rem; color: #7b341e; line-height: 1.4; }
-        .deadline-msg { text-align: center; background: #fed7d7; color: #9b2c2c; padding: 15px; border-radius: 8px; font-weight: bold; margin-top: 15px; border: 1px solid #feb2b2; }
+        .loading-banner { text-align: center; padding: 12px; background: #e6fffa; color: #234e52; font-weight: bold; border-radius: 6px; margin-bottom: 20px; font-size: 0.9rem; }
+        .deadline-msg { text-align: center; background: #fff5f5; color: #c53030; padding: 18px; border-radius: 6px; font-weight: bold; margin-top: 15px; border: 1px solid #fed7d7; line-height: 1.5; font-size: 0.95rem; }
     </style>
 </head>
 <body>
 <div id="app" class="container">
-    <h1>📅 保育参加・個人面談 受付</h1>
+    <h1>📅 個人面談 予約受付</h1>
 
-    <div v-if="loading" class="loading-banner">🔄 カレンダーと空き状況を読み込み中...</div>
-
-    <div class="notice-card">
-        💡 <b>【予約の手順】</b><br>
-        ① クラス、園児氏名、参加形式を選択します。<br>
-        ② カレンダーから「ご希望の日付」を選ぶと、下に時間枠が表示されます。<br>
-        ③ 「○ 空きあり」となっている時間枠を選択し、最後に予約確定ボタンを押してください。
-    </div>
+    <div v-if="loading" class="loading-banner">🔄 空き状況を読み込み中...</div>
 
     <div v-if="isSystemClosed" class="deadline-msg">
-        ⚠️ 大変申し訳ありません。今回の保育参加・個人面談のインターネット予約受付は終了いたしました。変更等は園まで直接ご連絡ください。
+        ⚠️ インターネット予約受付は終了いたしました。<br>変更・キャンセル等は園まで直接ご連絡ください。
     </div>
 
     <div v-else>
         <label>🏫 クラス</label>
         <select v-model="form.class">
-            <option value="">-- 所属クラスを選択してください --</option>
+            <option value="">-- 選択してください --</option>
             <option v-for="c in classes" :key="c.id" :value="c.name">{{ c.name }}</option>
         </select>
 
-        <label>👦 園児氏名（フルネーム）</label>
+        <label>👦 園児氏名</label>
         <input type="text" v-model="form.name" placeholder="例：ひらがな たろう">
 
-        <label>🤝 参加形式</label>
+        <label>🤝 面談形式</label>
         <select v-model="form.meetingType">
             <option value="対面形式">園での対面形式（来園）</option>
             <option value="オンライン(Zoom)">オンライン形式（Zoom面談）</option>
@@ -68,9 +61,9 @@
 
         <label>✉️ 控えメール送信先アドレス</label>
         <input type="email" v-model="form.email" placeholder="例：parent@example.com">
-        <p style="font-size:0.75rem; color:#718096; margin:4px 0 0 2px;">※予約完了後、こちらの宛先に自動控えメールがすぐに届きます。</p>
+        <p style="font-size:0.75rem; color:#718096; margin:6px 0 0 2px;">※予約完了後、こちらのアドレスに自動控えメールが届きます。</p>
 
-        <label>📅 ① ご希望の「日付」を選んでください</label>
+        <label>📅 ご希望の日付</label>
         <div class="grid-dates">
             <button 
                 v-for="d in dates" 
@@ -81,13 +74,13 @@
                 @click="selectDate(d.date)"
             >
                 {{ formatDisplayDate(d.date) }}
-                <div v-if="isDateClosed(d.date)" style="font-size:0.7rem; font-weight:normal; color:#e53e3e; margin-top:2px;">締切</div>
+                <div v-if="isDateClosed(d.date)" style="font-size:0.7rem; color:#e53e3e; margin-top:2px;">締切</div>
             </button>
         </div>
 
         <div v-if="form.date">
-            <label style="margin-top:20px;">🕒 ② ご希望の「時間枠」を選んでください</label>
-            <div class="grid-dates" style="margin-top:8px;">
+            <label style="margin-top:20px;">🕒 ご希望の時間枠</label>
+            <div class="grid-dates">
                 <button 
                     v-for="t in availableTimes" 
                     :key="t.id"
@@ -99,25 +92,25 @@
                     <div class="time-box">
                         <span>{{ t.time }}</span>
                         <span class="status-txt" :class="isFull(t.time) ? 'full' : 'ok'">
-                            {{ isFull(t.time) ? '× 満席' : '○ 空きあり' }}
+                            {{ isFull(t.time) ? '満席' : '○ 空き' }}
                         </span>
                     </div>
                 </button>
             </div>
             <p v-if="availableTimes.length === 0" style="text-align:center; color:#e53e3e; font-size:0.9rem; padding:10px;">
-                選択された日付には設定されている時間枠がありません。
+                選択された日付には時間枠が設定されていません。
             </p>
         </div>
 
-        <label>✏️ 備考欄（伝達事項などがあればご記入ください）</label>
-        <textarea v-model="form.note" rows="3" placeholder="質問や事前に伝えておきたいことがあればご記入ください（任意）"></textarea>
+        <label>✏️ 備考（伝達事項などがあればご記入ください）</label>
+        <textarea v-model="form.note" rows="3" placeholder="ご質問など（任意）"></textarea>
 
         <button 
             class="submit-btn" 
             :disabled="loading || !isFormValid"
             @click="submitReservation"
         >
-            {{ loading ? '⏳ 予約データを送信中...' : '確定する（予約を完了する）' }}
+            {{ loading ? '⏳ 送信中...' : 'この内容で予約を確定する' }}
         </button>
     </div>
 </div>
@@ -125,8 +118,7 @@
 <script>
     const { createApp, ref, computed, onMounted } = Vue;
     
-    // 🔗 ここにお使いの最新のGASウェブアプリURLを貼り付けてください
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbw-zkI75jOOP9wB0xKakehFFEAAkj-_2txS2Dk44KSGNsToqiglZ9Ug2gwKhzKYR0t6/exec";
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbx29DnKwEUk-PzXgPxWXOcgwxkM5QtI8La7ug5AtVx9wW1JMwzEfhI-K3opZsHPwi7h/exec";
 
     createApp({
         setup() {
@@ -158,7 +150,6 @@
                 } finally { loading.value = false; }
             };
 
-            // 1. 全体一斉締め切りの判定
             const isSystemClosed = computed(() => {
                 if (config.value.deadlineType === 'absolute' && config.value.deadlineAbsolute) {
                     const now = new Date(); const limit = new Date(config.value.deadlineAbsolute);
@@ -167,7 +158,6 @@
                 return false;
             });
 
-            // 2. 日付ごとの相対締め切り判定 (〇日前自動締切)
             const isDateClosed = (dateStr) => {
                 if (config.value.deadlineType === 'relative' && config.value.deadlineDays) {
                     const now = new Date(); now.setHours(0,0,0,0);
@@ -182,7 +172,6 @@
             const selectDate = (date) => { form.value.date = date; form.value.time = ""; };
             const availableTimes = computed(() => times.value.filter(t => String(t.date).trim() === String(form.value.date).trim()));
             
-            // 3. 満席(1枠1組)チェック
             const isFull = (timeStr) => {
                 return reserves.value.some(r => 
                     String(r.date).trim() === String(form.value.date).trim() && 
@@ -197,7 +186,6 @@
             const submitReservation = async () => {
                 if (!isFormValid.value) return;
                 
-                // 送信直前の二重締切・満席チェック
                 if (isDateClosed(form.value.date)) { alert("申し訳ありません、この日付の受付枠は締め切られました。"); return; }
                 if (isFull(form.value.time)) { alert("申し訳ありません、タッチの差でこの時間枠が満席になりました。別の日時を選択してください。"); loadData(); return; }
 
@@ -215,7 +203,6 @@
                         await loadData();
                     } else {
                         alert("🎉 ご予約が正常に完了いたしました！\n入力されたアドレスへ自動控えメールをお送りしましたのでご確認ください。");
-                        // フォームのリセット
                         form.value = { class: "", name: "", meetingType: "対面形式", email: "", date: "", time: "", note: "" };
                         await loadData();
                     }
