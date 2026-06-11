@@ -9,7 +9,6 @@
         body { font-family: sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; }
         h1 { text-align: center; color: #2c3e50; margin-bottom: 25px; font-size: 1.8rem; }
         
-        /* 💡 画面幅を最大限活かし、左右のバランスを最適化しました */
         .admin-workspace { display: flex; gap: 20px; align-items: flex-start; max-width: 100%; margin: 0 auto; }
         .column-left { flex: 0 0 400px; display: flex; flex-direction: column; gap: 20px; }
         .column-right { flex: 1; min-width: 0; position: sticky; top: 20px; }
@@ -33,24 +32,14 @@
         .time-setup-row { background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 6px; margin-bottom: 10px; }
         .time-setup-title { font-weight: bold; font-size: 0.9rem; margin-bottom: 8px; color: #4a5568; display: flex; justify-content: space-between; }
         
-        /* 💡 各列の横幅にメリハリをつけ、はみ出しを徹底防止しました */
-        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 10px; table-layout: fixed; }
-        th, td { border: 1px solid #e2e8f0; padding: 8px 6px; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        /* 💡 テーブル幅の設定を見直し、見切れを発生させないスタイルに変更しました */
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 10px; }
+        th, td { border: 1px solid #e2e8f0; padding: 8px 6px; text-align: left; }
         th { background: #f8fafc; color: #4a5568; font-weight: bold; }
         tr:hover { background: #f8fafc; }
 
-        /* 列ごとの幅指定（合計100%） */
-        .col-date  { width: 9%; }
-        .col-time  { width: 14%; }
-        .col-class { width: 22%; }
-        .col-name  { width: 12%; }
-        .col-type  { width: 13%; }
-        .col-email { width: 13%; }
-        .col-note  { width: 11%; }
-        .col-op    { width: 6%; }
-
-        /* 備考欄とメール欄はホバー時や詳細表示で行を崩さず見やすく */
-        td.cell-scroll { white-space: pre-wrap; word-break: break-all; font-size: 0.8rem; }
+        /* 💡 備考欄（cell-scroll）が絶対に隠れず、枠内で自動で折り返して表示されるように修正 */
+        td.cell-scroll { white-space: normal; word-break: break-all; font-size: 0.8rem; }
 
         .login-overlay { text-align: center; max-width: 400px; margin: 100px auto; }
         .sync-banner { text-align: center; padding: 15px; background: #eaf4ff; color: #2b6cb0; font-weight: bold; border-radius: 6px; margin-bottom: 20px; }
@@ -64,17 +53,9 @@
             .column-right.card { border: none; box-shadow: none; padding: 0; }
             .column-right h2 { display: none !important; }
             .print-header { display: block; text-align: center; margin-bottom: 20px; font-size: 18pt; font-weight: bold; border-bottom: 2px solid #333; padding-bottom: 10px; }
-            table { width: 100%; border: 1px solid #000; font-size: 9pt; table-layout: fixed; }
+            table { width: 100%; border: 1px solid #000; font-size: 9pt; }
             th, td { border: 1px solid #000; padding: 6px 4px; color: #000; white-space: normal; }
             th { background: #f0f0f0 !important; }
-            .col-op { display: none; }
-            .col-date  { width: 10%; }
-            .col-time  { width: 15%; }
-            .col-class { width: 25%; }
-            .col-name  { width: 13%; }
-            .col-type  { width: 13%; }
-            .col-email { width: 12%; }
-            .col-note  { width: 12%; }
         }
     </style>
 </head>
@@ -175,7 +156,7 @@
                     <div class="form-inline" style="margin-bottom:5px;">
                         <span style="font-size:0.85rem; font-weight:bold; color:#2b6cb0;">対象期間:</span>
                         <select v-model="timeBatch.startDate"><option v-for="d in dates" :value="d.date">{{formatDisplayDate(d.date)}}</option></select>
-                        から
+                        from
                         <select v-model="timeBatch.endDate"><option v-for="d in dates" :value="d.date">{{formatDisplayDate(d.date)}}</option></select>
                     </div>
                     <div class="form-inline" style="margin-bottom:0;">
@@ -211,18 +192,18 @@
                 <button class="secondary" @click="printReservations">🖨️ 予約一覧を印刷する / PDF保存</button>
                 <button class="secondary" style="background:#718096; margin-left:auto;" @click="logout">🔓 ログアウト</button>
             </div>
-            <div style="width: 100%; overflow: visible;">
+            <div style="width: 100%; overflow-x: auto;">
                 <table id="reserve-table">
                     <thead>
                         <tr>
-                            <th class="col-date">実施日</th>
-                            <th class="col-time">時間枠</th>
-                            <th class="col-class">クラス</th>
-                            <th class="col-name">園児氏名</th>
-                            <th class="col-type">形式</th>
-                            <th class="col-email">保護者メール</th>
-                            <th class="col-note">備考</th>
-                            <th class="col-op">操作</th>
+                            <th>実施日</th>
+                            <th>時間枠</th>
+                            <th>クラス</th>
+                            <th>園児氏名</th>
+                            <th>形式</th>
+                            <th>保護者メール</th>
+                            <th>備考</th>
+                            <th>操作</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -230,13 +211,13 @@
                             <td colspan="8" style="text-align:center; color:#a0aec0; padding:20px;">現在、予約データはありません。</td>
                         </tr>
                         <tr v-for="r in reserves" :key="r.id">
-                            <td>{{ formatDisplayDate(r.date) }}</td>
-                            <td>{{ r.time }}</td>
-                            <td class="cell-scroll" style="font-size:0.8rem;">{{ r.class }}</td>
-                            <td>{{ r.name }}</td>
-                            <td>{{ r.meetingType }}</td>
+                            <td style="white-space: nowrap;">{{ formatDisplayDate(r.date) }}</td>
+                            <td style="white-space: nowrap;">{{ r.time }}</td>
+                            <td class="cell-scroll">{{ r.class }}</td>
+                            <td style="white-space: nowrap;">{{ r.name }}</td>
+                            <td style="white-space: nowrap;">{{ r.meetingType }}</td>
                             <td class="cell-scroll">{{ r.email }}</td>
-                            <td class="cell-scroll" style="font-weight: 500;">{{ r.note || 'ー' }}</td>
+                            <td class="cell-scroll" style="font-weight: bold; background: #fffdf5;">{{ r.note || 'ー' }}</td>
                             <td><button class="danger" style="padding:4px 8px; font-size:0.75rem;" @click="deleteReservationRow(r.id)">取消</button></td>
                         </tr>
                     </tbody>
