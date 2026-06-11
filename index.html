@@ -3,254 +3,230 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>保育参加 予約システム</title>
+    <title>保育参加・個人面談 予約システム</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <style>
-        body { font-family: sans-serif; background: #f0f4f8; margin: 0; padding: 0; color: #333; }
-        .container { max-width: 600px; margin: 30px auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        h1 { text-align: center; color: #2b6cb0; font-size: 1.6rem; margin-bottom: 25px; }
-        .info-msg { background: #eaf4ff; border-left: 4px solid #3182ce; padding: 12px; border-radius: 4px; font-size: 0.9rem; margin-bottom: 20px; line-height: 1.5; }
-        .form-group { margin-bottom: 20px; }
-        label { display: block; font-weight: bold; margin-bottom: 8px; color: #4a5568; font-size: 0.95rem; }
-        input[type="text"], input[type="email"], select, textarea { width: 100%; padding: 10px; border: 1px solid #cbd5e0; border-radius: 6px; box-sizing: border-box; font-size: 1rem; }
-        textarea { resize: vertical; min-height: 80px; font-family: sans-serif; }
-        .grid-slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin-top: 5px; }
-        .slot-btn { padding: 12px; text-align: center; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; background: #fff; transition: all 0.2s; }
-        .slot-btn:hover:not(.disabled) { border-color: #3182ce; background: #ebf8ff; }
-        .slot-btn.selected { border-color: #3182ce; background: #3182ce; color: white; font-weight: bold; }
-        /* 💡 埋まっている（満席）のボタンは、グレーアウトしてポインターを禁止（クリックしても無反応）にする */
-        .slot-btn.disabled { background: #edf2f7; color: #a0aec0; cursor: not-allowed; border-color: #edf2f7; pointer-events: none; }
-        .slot-num { font-size: 0.75rem; display: block; margin-top: 4px; color: #718096; }
-        .slot-btn.selected .slot-num { color: #ebf8ff; }
-        button.submit-btn { width: 100%; padding: 14px; background: #3182ce; color: white; border: none; border-radius: 6px; font-size: 1.1rem; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        button.submit-btn:hover { background: #2b6cb0; }
-        button.submit-btn:disabled { background: #cbd5e0; cursor: not-allowed; }
-        .loading, .success-view { text-align: center; padding: 40px 20px; }
-        .success-icon { font-size: 3.5rem; color: #48bb78; margin-bottom: 15px; }
-        .waiting-msg { color: #718096; font-size: 0.9rem; padding: 15px; background: #f7fafc; border: 1px solid #e2e8f0; border-radius: 6px; text-align: center; }
+        body { font-family: sans-serif; background: #fffdf9; margin: 0; padding: 15px; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 2px solid #fbd38d; }
+        h1 { text-align: center; color: #dd6b20; font-size: 1.5rem; margin-bottom: 20px; border-bottom: 2px dotted #fbd38d; padding-bottom: 10px; }
+        
+        label { display: block; margin-top: 15px; font-weight: bold; color: #7b341e; font-size: 0.95rem; }
+        input[type="text"], input[type="email"], select, textarea { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #cbd5e0; border-radius: 6px; box-sizing: border-box; font-size: 1rem; background: #fffaf0; }
+        
+        .grid-dates { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 150px)); gap: 10px; margin-top: 8px; justify-content: center; }
+        .btn-choice { border: 2px solid #cbd5e0; background: #fff; padding: 10px; border-radius: 8px; cursor: pointer; text-align: center; font-size: 0.95rem; font-weight: bold; transition: all 0.2s; }
+        .btn-choice:hover:not(:disabled) { border-color: #ed8936; background: #fffaf0; }
+        .btn-choice.selected { background: #ed8936; color: #fff; border-color: #dd6b20; }
+        .btn-choice:disabled { background: #e2e8f0; color: #a0aec0; cursor: not-allowed; border-color: #cbd5e0; }
+
+        .time-box { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 55px; }
+        .status-txt { font-size: 0.75rem; font-weight: normal; margin-top: 3px; }
+        .status-txt.ok { color: #38a169; }
+        .status-txt.full { color: #e53e3e; }
+
+        button.submit-btn { width: 100%; padding: 14px; background: #ecc94b; color: #7b341e; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; margin-top: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        button.submit-btn:hover:not(:disabled) { background: #dd6b20; color: #fff; }
+        button.submit-btn:disabled { background: #cbd5e0; color: #a0aec0; cursor: not-allowed; }
+
+        .loading-banner { text-align: center; padding: 12px; background: #feebc8; color: #c05621; font-weight: bold; border-radius: 6px; margin-bottom: 15px; }
+        .notice-card { background: #fffaf0; border: 1px solid #feebc8; padding: 12px; border-radius: 6px; margin-bottom: 15px; font-size: 0.85rem; color: #7b341e; line-height: 1.4; }
+        .deadline-msg { text-align: center; background: #fed7d7; color: #9b2c2c; padding: 15px; border-radius: 8px; font-weight: bold; margin-top: 15px; border: 1px solid #feb2b2; }
     </style>
 </head>
 <body>
-<div id="app">
-    <div class="container">
-        <div v-if="pageStatus === 'loading'" class="loading">
-            <p style="font-size:1.2rem; font-weight:bold; color:#4a5568;">🔄 予約空き状況を確認中...</p>
-        </div>
+<div id="app" class="container">
+    <h1>📅 保育参加・個人面談 受付</h1>
 
-        <div v-else-if="pageStatus === 'closed'" class="success-view">
-            <div style="font-size:3.5rem; margin-bottom:15px;">⏳</div>
-            <h2>本日の受付は終了いたしました</h2>
-            <p style="color:#718096; line-height:1.6;">恐れ入りますが、予約の締め切り時間を過ぎたか、現在受付時間外となっております。園まで直接お問い合わせください。</p>
-        </div>
+    <div v-if="loading" class="loading-banner">🔄 カレンダーと空き状況を読み込み中...</div>
 
-        <div v-else-if="pageStatus === 'form'">
-            <h1>🏫 保育参加 予約フォーム</h1>
-            
-            <div class="info-msg">
-                ※ 各時間枠とも定員に達し次第、受付終了となります。<br>
-                ※ 予約完了後、ご入力いただいたメールアドレスへ自動控えメールが届きます。
-            </div>
+    <div class="notice-card">
+        💡 <b>【予約の手順】</b><br>
+        ① クラス、園児氏名、参加形式を選択します。<br>
+        ② カレンダーから「ご希望の日付」を選ぶと、下に時間枠が表示されます。<br>
+        ③ 「○ 空きあり」となっている時間枠を選択し、最後に予約確定ボタンを押してください。
+    </div>
 
-            <div class="form-group">
-                <label>1. お子様のクラスを選択してください</label>
-                <select v-model="form.class" @change="onClassChange">
-                    <option value="">-- クラスを選択 --</option>
-                    <option v-for="c in classes" :key="c.id" :value="c.name">{{ c.name }}</option>
-                </select>
-            </div>
+    <div v-if="isSystemClosed" class="deadline-msg">
+        ⚠️ 大変申し訳ありません。今回の保育参加・個人面談のインターネット予約受付は終了いたしました。変更等は園まで直接ご連絡ください。
+    </div>
 
-            <div class="form-group">
-                <label>2. 参加希望日を選択してください</label>
-                <select v-model="selectedDateIndex" @change="onDateChange">
-                    <option value="">-- 日付を選択 --</option>
-                    <option v-for="(d, idx) in dates" :key="d.id" :value="idx">{{ formatJapaneseDate(d.date) }}</option>
-                </select>
-            </div>
+    <div v-else>
+        <label>🏫 クラス</label>
+        <select v-model="form.class">
+            <option value="">-- 所属クラスを選択してください --</option>
+            <option v-for="c in classes" :key="c.id" :value="c.name">{{ c.name }}</option>
+        </select>
 
-            <div class="form-group">
-                <label>3. 時間枠を選択してください</label>
-                <div v-if="!form.date" class="waiting-msg">
-                    👆 参加希望日を選択してください。空き枠が表示されます。
-                </div>
-                <div v-else class="grid-slots">
-                    <div v-for="s in slots" :key="s.time" 
-                         class="slot-btn" 
-                         :class="{ disabled: !s.available, selected: form.time === s.time }"
-                         @click="selectSlot(s)">
-                        <strong>{{ s.time }}</strong>
-                        <span class="slot-num" v-if="s.available">受付中</span>
-                        <span class="slot-num" v-else style="color:#e53e3e; font-weight:bold;">満席</span>
-                    </div>
-                </div>
-            </div>
+        <label>👦 園児氏名（フルネーム）</label>
+        <input type="text" v-model="form.name" placeholder="例：ひらがな たろう">
 
-            <div class="form-group">
-                <label>4. 園児氏名（フルネーム）</label>
-                <input type="text" v-model="form.name" placeholder="例：ひかり 太郎">
-            </div>
+        <label>🤝 参加形式</label>
+        <select v-model="form.meetingType">
+            <option value="対面形式">園での対面形式（来園）</option>
+            <option value="オンライン(Zoom)">オンライン形式（Zoom面談）</option>
+        </select>
 
-            <div class="form-group">
-                <label>5. 参加形式</label>
-                <select v-model="form.meetingType">
-                    <option value="対面参加">対面参加</option>
-                    <option value="オンライン（Zoom）">オンライン（Zoom）</option>
-                </select>
-            </div>
+        <label>✉️ 控えメール送信先アドレス</label>
+        <input type="email" v-model="form.email" placeholder="例：parent@example.com">
+        <p style="font-size:0.75rem; color:#718096; margin:4px 0 0 2px;">※予約完了後、こちらの宛先に自動控えメールがすぐに届きます。</p>
 
-            <div class="form-group">
-                <label>6. 保護者メールアドレス</label>
-                <input type="email" v-model="form.email" placeholder="例：parent@example.com">
-            </div>
-
-            <div class="form-group">
-                <label>7. 備考・伝達事項（任意）</label>
-                <textarea v-model="form.note" placeholder="園へのご要望や事前に伝えておきたい配慮事項などがあればご記入ください（100文字以内）" maxlength="100"></textarea>
-            </div>
-
-            <button class="submit-btn" :disabled="submitting || !isFormValid" @click="submitReservation">
-                {{ submitting ? '🔒 予約を確定させています...' : '✉️ この内容で予約を確定する' }}
+        <label>📅 ① ご希望の「日付」を選んでください</label>
+        <div class="grid-dates">
+            <button 
+                v-for="d in dates" 
+                :key="d.id"
+                class="btn-choice"
+                :class="{ selected: form.date === d.date }"
+                :disabled="isDateClosed(d.date)"
+                @click="selectDate(d.date)"
+            >
+                {{ formatDisplayDate(d.date) }}
+                <div v-if="isDateClosed(d.date)" style="font-size:0.7rem; font-weight:normal; color:#e53e3e; margin-top:2px;">締切</div>
             </button>
         </div>
 
-        <div v-else-if="pageStatus === 'success'" class="success-view">
-            <div class="success-icon">✓</div>
-            <h2>保育参加の予約が完了しました！</h2>
-            <p style="color:#4a5568; font-weight:bold; margin-top:20px;">【ご予約内容】</p>
-            <div style="text-align:left; background:#f7fafc; padding:15px; border-radius:8px; display:inline-block; margin:10px auto; font-size:0.95rem; line-height:1.6; border:1px solid #e2e8f0;">
-                <div>🔹日時：{{ formatJapaneseDate(form.date) }} {{ form.time }}</div>
-                <div>🔹クラス：{{ form.class }}</div>
-                <div>🔹園児：{{ form.name }} 様</div>
-                <div>🔹形式：{{ form.meetingType }}</div>
+        <div v-if="form.date">
+            <label style="margin-top:20px;">🕒 ② ご希望の「時間枠」を選んでください</label>
+            <div class="grid-dates" style="margin-top:8px;">
+                <button 
+                    v-for="t in availableTimes" 
+                    :key="t.id"
+                    class="btn-choice"
+                    :class="{ selected: form.time === t.time }"
+                    :disabled="isFull(t.time)"
+                    @click="form.time = t.time"
+                >
+                    <div class="time-box">
+                        <span>{{ t.time }}</span>
+                        <span class="status-txt" :class="isFull(t.time) ? 'full' : 'ok'">
+                            {{ isFull(t.time) ? '× 満席' : '○ 空きあり' }}
+                        </span>
+                    </div>
+                </button>
             </div>
-            <p style="color:#718096; font-size:0.9rem; margin-top:15px; line-height:1.5;">ご入力いただいたメールアドレス宛に自動控えメールを送信しました。<br>画面を閉じて終了してください。誠にありがとうございました。</p>
+            <p v-if="availableTimes.length === 0" style="text-align:center; color:#e53e3e; font-size:0.9rem; padding:10px;">
+                選択された日付には設定されている時間枠がありません。
+            </p>
         </div>
+
+        <label>✏️ 備考欄（伝達事項などがあればご記入ください）</label>
+        <textarea v-model="form.note" rows="3" placeholder="質問や事前に伝えておきたいことがあればご記入ください（任意）"></textarea>
+
+        <button 
+            class="submit-btn" 
+            :disabled="loading || !isFormValid"
+            @click="submitReservation"
+        >
+            {{ loading ? '⏳ 予約データを送信中...' : '確定する（予約を完了する）' }}
+        </button>
     </div>
 </div>
 
 <script>
     const { createApp, ref, computed, onMounted } = Vue;
     
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbwRrYrNOEMd59Mpax8Tm1mxnwII_cXiT_OucTF8mOUgJQmYznhdo-G9uqeRxBP-9_Ap/exec"; 
+    // 🔗 ここにお使いの最新のGASウェブアプリURLを貼り付けてください
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbw-zkI75jOOP9wB0xKakehFFEAAkj-_2txS2Dk44KSGNsToqiglZ9Ug2gwKhzKYR0t6/exec";
 
     createApp({
         setup() {
-            const pageStatus = ref("loading");
-            const submitting = ref(false);
+            const loading = ref(false);
+            const classes = ref([]); const dates = ref([]); const times = ref([]); const reserves = ref([]);
+            const config = ref({ deadlineType: "none", deadlineAbsolute: "", deadlineDays: 1 });
+            
+            const form = ref({ class: "", name: "", meetingType: "対面形式", email: "", date: "", time: "", note: "" });
 
-            const classes = ref([]); const dates = ref([]); const slots = ref([]);
-            const selectedDateIndex = ref("");
-            const form = ref({ class: "", date: "", time: "", name: "", meetingType: "対面参加", email: "", note: "" });
-
-            let masterTimes = [];
-            let masterReserves = [];
-
-            const isFormValid = computed(() => {
-                return form.value.class && form.value.date && form.value.time && form.value.name.trim() && form.value.email.trim() && form.value.meetingType;
-            });
-
-            const formatJapaneseDate = (dateStr) => {
-                if (!dateStr) return "";
-                let s = String(dateStr).trim();
-                if (s.includes("T")) s = s.split("T")[0];
-                s = s.replace(/\//g, "-");
-                
-                let longMatch = s.match(/^(\d{4})[-年](\d{1,2})[-月](\d{1,2})/);
-                if (longMatch) {
-                    return `${Number(longMatch[2])}月${Number(longMatch[3])}日`;
-                }
-                let shortMatch = s.match(/^(\d{1,2})[-月](\d{1,2})/);
-                if (shortMatch) {
-                    return `${Number(shortMatch[1])}月${Number(shortMatch[2])}日`;
-                }
-                return dateStr;
+            const formatDisplayDate = (dStr) => {
+                if(!dStr) return "";
+                let s = String(dStr).trim().replace(/\//g, "-");
+                let m = s.match(/^(\d{4})[-年](\d{1,2})[-月](\d{1,2})/);
+                if(m) return `${Number(m[2])}月${Number(m[3])}日`;
+                return dStr;
             };
 
-            const onClassChange = () => { form.value.time = ""; };
-
-            const onDateChange = () => {
-                form.value.time = "";
-                if (selectedDateIndex.value === "") {
-                    form.value.date = "";
-                    slots.value = [];
-                    return;
-                }
-                form.value.date = dates.value[selectedDateIndex.value].date;
-                buildSlots();
-            };
-
-            const buildSlots = () => {
-                if (!form.value.date) return;
-                
-                const matchedTimes = masterTimes.filter(t => String(t.date).trim() === String(form.value.date).trim());
-                
-                const uniqueTimeStrings = [];
-                const seen = new Set();
-                for (const t of matchedTimes) {
-                    const tStr = String(t.time).trim();
-                    if (!seen.has(tStr)) {
-                        seen.add(tStr);
-                        uniqueTimeStrings.push(tStr);
-                    }
-                }
-                uniqueTimeStrings.sort();
-
-                slots.value = uniqueTimeStrings.map(tStr => {
-                    const isTaken = masterReserves.some(r => 
-                        String(r.date).trim() === String(form.value.date).trim() && 
-                        String(r.time).trim() === tStr
-                    );
-                    return { time: tStr, available: !isTaken };
-                });
-            };
-
-            const selectSlot = (s) => {
-                // 💡 満席（availableがfalse）の場合は選択処理を完全にスキップ
-                if (!s.available) return;
-                form.value.time = s.time;
-            };
-
-            const submitReservation = async () => {
-                if (!isFormValid.value || submitting.value) return;
-                submitting.value = true;
-                
-                let finalMeetingType = form.value.meetingType;
-                if (form.value.note.trim()) {
-                    finalMeetingType += ` (備考: ${form.value.note.trim()})`;
-                }
-
-                const payload = {
-                    type: "reserve",
-                    class: form.value.class,
-                    date: form.value.date,
-                    time: form.value.time,
-                    name: form.value.name.trim(),
-                    meetingType: finalMeetingType,
-                    email: form.value.email.trim()
-                };
-
-                try {
-                    const res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) });
-                    const json = await res.json();
-                    if (json.status === "success") { pageStatus.value = "success"; } 
-                    else { alert("予約に失敗しました: " + json.message); submitting.value = false; }
-                } catch(e) { alert("通信エラーが発生しました。"); submitting.value = false; }
-            };
-
-            onMounted(async () => {
+            const loadData = async () => {
+                loading.value = true;
                 try {
                     const res = await fetch(GAS_URL); const json = await res.json();
-                    if (json.isClosed) { pageStatus.value = "closed"; return; }
-                    
                     classes.value = json.classes || [];
                     dates.value = json.dates || [];
-                    masterTimes = json.times || [];
-                    masterReserves = json.reserves || [];
-                    
-                    pageStatus.value = "form";
-                } catch(e) { pageStatus.value = "closed"; }
+                    times.value = json.times || [];
+                    reserves.value = json.reserves || [];
+                    if (json.config) config.value = json.config;
+                } catch(e) {
+                    alert("データの読み込みに失敗しました。時間をおいて再度お試しください。");
+                } finally { loading.value = false; }
+            };
+
+            // 1. 全体一斉締め切りの判定
+            const isSystemClosed = computed(() => {
+                if (config.value.deadlineType === 'absolute' && config.value.deadlineAbsolute) {
+                    const now = new Date(); const limit = new Date(config.value.deadlineAbsolute);
+                    return now >= limit;
+                }
+                return false;
             });
 
-            return { pageStatus, submitting, classes, dates, slots, form, selectedDateIndex, isFormValid, onClassChange, onDateChange, selectSlot, submitReservation, formatJapaneseDate };
+            // 2. 日付ごとの相対締め切り判定 (〇日前自動締切)
+            const isDateClosed = (dateStr) => {
+                if (config.value.deadlineType === 'relative' && config.value.deadlineDays) {
+                    const now = new Date(); now.setHours(0,0,0,0);
+                    const targetDate = new Date(dateStr.replace(/\//g, "-")); targetDate.setHours(0,0,0,0);
+                    const diffTime = targetDate.getTime() - now.getTime();
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    return diffDays < Number(config.value.deadlineDays);
+                }
+                return false;
+            };
+
+            const selectDate = (date) => { form.value.date = date; form.value.time = ""; };
+            const availableTimes = computed(() => times.value.filter(t => String(t.date).trim() === String(form.value.date).trim()));
+            
+            // 3. 満席(1枠1組)チェック
+            const isFull = (timeStr) => {
+                return reserves.value.some(r => 
+                    String(r.date).trim() === String(form.value.date).trim() && 
+                    String(r.time).trim() === String(timeStr).trim()
+                );
+            };
+
+            const isFormValid = computed(() => {
+                return form.value.class && form.value.name.trim() && form.value.email.trim() && form.value.date && form.value.time;
+            });
+
+            const submitReservation = async () => {
+                if (!isFormValid.value) return;
+                
+                // 送信直前の二重締切・満席チェック
+                if (isDateClosed(form.value.date)) { alert("申し訳ありません、この日付の受付枠は締め切られました。"); return; }
+                if (isFull(form.value.time)) { alert("申し訳ありません、タッチの差でこの時間枠が満席になりました。別の日時を選択してください。"); loadData(); return; }
+
+                if (!confirm("この内容で予約を確定させます。よろしいですか？")) return;
+
+                loading.value = true;
+                try {
+                    const response = await fetch(GAS_URL, {
+                        method: "POST",
+                        body: JSON.stringify({ type: "addReservation", ...form.value })
+                    });
+                    const result = await response.json();
+                    if (result.status === "full") {
+                        alert("申し訳ありません、指定の枠は満席になりました。");
+                        await loadData();
+                    } else {
+                        alert("🎉 ご予約が正常に完了いたしました！\n入力されたアドレスへ自動控えメールをお送りしましたのでご確認ください。");
+                        // フォームのリセット
+                        form.value = { class: "", name: "", meetingType: "対面形式", email: "", date: "", time: "", note: "" };
+                        await loadData();
+                    }
+                } catch(e) {
+                    alert("通信エラーが発生しました。予約がとれていない可能性があります。園まで直接ご連絡ください。");
+                } finally { loading.value = false; }
+            };
+
+            onMounted(loadData);
+
+            return { loading, classes, dates, form, availableTimes, isSystemClosed, isDateClosed, selectDate, isFull, isFormValid, submitReservation, formatDisplayDate };
         }
     }).mount('#app');
 </script>
