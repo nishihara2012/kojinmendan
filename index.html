@@ -118,7 +118,7 @@
 <script>
     const { createApp, ref, computed, onMounted } = Vue;
     
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbx29DnKwEUk-PzXgPxWXOcgwxkM5QtI8La7ug5AtVx9wW1JMwzEfhI-K3opZsHPwi7h/exec";
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbwrUDnTsj-j2RSwM9EZwAsq7yItA4moPzeFJmYyMjamCAUnukrRM1iYqtD7OeUfASFI/exec";
 
     createApp({
         setup() {
@@ -198,7 +198,10 @@
                         body: JSON.stringify({ type: "addReservation", ...form.value })
                     });
                     const result = await response.json();
-                    if (result.status === "full") {
+                    
+                    if (result.status === "name_exists") {
+                        alert("⚠️ このお子様のお名前は、既に他の枠で面談予約が完了しています。\n重複して登録することはできません。変更がある場合は園までご連絡ください。");
+                    } else if (result.status === "full") {
                         alert("申し訳ありません、指定の枠は満席になりました。");
                         await loadData();
                     } else {
