@@ -9,9 +9,10 @@
         body { font-family: sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; }
         h1 { text-align: center; color: #2c3e50; margin-bottom: 25px; font-size: 1.8rem; }
         
-        .admin-workspace { display: flex; gap: 25px; align-items: flex-start; max-width: 1400px; margin: 0 auto; }
-        .column-left { flex: 1; min-width: 420px; display: flex; flex-direction: column; gap: 20px; }
-        .column-right { flex: 1.5; min-width: 600px; position: sticky; top: 20px; }
+        /* 💡 画面幅を最大限活かし、左右のバランスを最適化しました */
+        .admin-workspace { display: flex; gap: 20px; align-items: flex-start; max-width: 100%; margin: 0 auto; }
+        .column-left { flex: 0 0 400px; display: flex; flex-direction: column; gap: 20px; }
+        .column-right { flex: 1; min-width: 0; position: sticky; top: 20px; }
 
         .card { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; }
         .card h2 { margin-top: 0; border-left: 4px solid #3498db; padding-left: 10px; font-size: 1.15rem; color: #2c3e50; margin-bottom: 15px; }
@@ -32,33 +33,48 @@
         .time-setup-row { background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 6px; margin-bottom: 10px; }
         .time-setup-title { font-weight: bold; font-size: 0.9rem; margin-bottom: 8px; color: #4a5568; display: flex; justify-content: space-between; }
         
-        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin-top: 10px; }
-        th, td { border: 1px solid #e2e8f0; padding: 10px; text-align: left; }
+        /* 💡 各列の横幅にメリハリをつけ、はみ出しを徹底防止しました */
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 10px; table-layout: fixed; }
+        th, td { border: 1px solid #e2e8f0; padding: 8px 6px; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         th { background: #f8fafc; color: #4a5568; font-weight: bold; }
         tr:hover { background: #f8fafc; }
+
+        /* 列ごとの幅指定（合計100%） */
+        .col-date  { width: 9%; }
+        .col-time  { width: 14%; }
+        .col-class { width: 22%; }
+        .col-name  { width: 12%; }
+        .col-type  { width: 13%; }
+        .col-email { width: 13%; }
+        .col-note  { width: 11%; }
+        .col-op    { width: 6%; }
+
+        /* 備考欄とメール欄はホバー時や詳細表示で行を崩さず見やすく */
+        td.cell-scroll { white-space: pre-wrap; word-break: break-all; font-size: 0.8rem; }
 
         .login-overlay { text-align: center; max-width: 400px; margin: 100px auto; }
         .sync-banner { text-align: center; padding: 15px; background: #eaf4ff; color: #2b6cb0; font-weight: bold; border-radius: 6px; margin-bottom: 20px; }
         
-        /* 印刷専用のタイトルヘッダー（通常画面では隠す） */
         .print-header { display: none; }
 
-        /* =================================================================
-           🖨️ 印刷用（A4横などを想定した最適化スタイルの定義）
-           ================================================================= */
         @media print {
-            body { background: #fff; color: #000; padding: 0; font-size: 11pt; }
+            body { background: #fff; color: #000; padding: 0; font-size: 10pt; }
             h1, .sync-banner, .column-left, .login-overlay, .form-inline, th:last-child, td:last-child { display: none !important; }
             .admin-workspace { display: block; max-width: 100%; margin: 0; }
             .column-right.card { border: none; box-shadow: none; padding: 0; }
             .column-right h2 { display: none !important; }
-            
-            /* 印刷時のみ「個人面談予定表」のタイトルを最上部に表示 */
-            .print-header { display: block; text-align: center; margin-bottom: 20px; font-size: 20pt; font-weight: bold; border-bottom: 2px solid #333; padding-bottom: 10px; }
-            
-            table { width: 100%; border: 1px solid #000; font-size: 10pt; }
-            th, td { border: 1px solid #000; padding: 8px; color: #000; }
+            .print-header { display: block; text-align: center; margin-bottom: 20px; font-size: 18pt; font-weight: bold; border-bottom: 2px solid #333; padding-bottom: 10px; }
+            table { width: 100%; border: 1px solid #000; font-size: 9pt; table-layout: fixed; }
+            th, td { border: 1px solid #000; padding: 6px 4px; color: #000; white-space: normal; }
             th { background: #f0f0f0 !important; }
+            .col-op { display: none; }
+            .col-date  { width: 10%; }
+            .col-time  { width: 15%; }
+            .col-class { width: 25%; }
+            .col-name  { width: 13%; }
+            .col-type  { width: 13%; }
+            .col-email { width: 12%; }
+            .col-note  { width: 12%; }
         }
     </style>
 </head>
@@ -195,17 +211,18 @@
                 <button class="secondary" @click="printReservations">🖨️ 予約一覧を印刷する / PDF保存</button>
                 <button class="secondary" style="background:#718096; margin-left:auto;" @click="logout">🔓 ログアウト</button>
             </div>
-            <div style="overflow-x:auto;">
+            <div style="width: 100%; overflow: visible;">
                 <table id="reserve-table">
                     <thead>
                         <tr>
-                            <th>実施日</th>
-                            <th>時間枠</th>
-                            <th>クラス</th>
-                            <th>園児氏名</th>
-                            <th>形式</th>
-                            <th>保護者メール</th>
-                            <th>備考</th> <th>操作</th>
+                            <th class="col-date">実施日</th>
+                            <th class="col-time">時間枠</th>
+                            <th class="col-class">クラス</th>
+                            <th class="col-name">園児氏名</th>
+                            <th class="col-type">形式</th>
+                            <th class="col-email">保護者メール</th>
+                            <th class="col-note">備考</th>
+                            <th class="col-op">操作</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -215,11 +232,12 @@
                         <tr v-for="r in reserves" :key="r.id">
                             <td>{{ formatDisplayDate(r.date) }}</td>
                             <td>{{ r.time }}</td>
-                            <td>{{ r.class }}</td>
+                            <td class="cell-scroll" style="font-size:0.8rem;">{{ r.class }}</td>
                             <td>{{ r.name }}</td>
                             <td>{{ r.meetingType }}</td>
-                            <td style="font-size:0.8rem; max-width:110px; overflow:hidden; text-overflow:ellipsis;">{{ r.email }}</td>
-                            <td style="font-size:0.85rem; max-width:180px; white-space:pre-wrap; word-break:break-all;">{{ r.note || 'ー' }}</td> <td><button class="danger" style="padding:4px 8px; font-size:0.75rem;" @click="deleteReservationRow(r.id)">取消</button></td>
+                            <td class="cell-scroll">{{ r.email }}</td>
+                            <td class="cell-scroll" style="font-weight: 500;">{{ r.note || 'ー' }}</td>
+                            <td><button class="danger" style="padding:4px 8px; font-size:0.75rem;" @click="deleteReservationRow(r.id)">取消</button></td>
                         </tr>
                     </tbody>
                 </table>
