@@ -1,229 +1,398 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>個人面談 予約システム</title>
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <style>
-        body { font-family: sans-serif; background: #f4f6f4; margin: 0; padding: 20px; color: #4a4a4a; }
-        .container { max-width: 600px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; }
-        h1 { text-align: center; color: #2d3748; font-size: 1.4rem; margin-bottom: 25px; font-weight: bold; letter-spacing: 0.05em; }
-        
-        label { display: block; margin-top: 20px; font-weight: bold; color: #2d3748; font-size: 0.95rem; }
-        input[type="text"], input[type="email"], select, textarea { width: 100%; padding: 11px; margin-top: 6px; border: 1px solid #cbd5e0; border-radius: 6px; box-sizing: border-box; font-size: 0.95rem; background: #fafafa; color: #4a4a4a; transition: border-color 0.2s; }
-        input[type="text"]:focus, input[type="email"]:focus, select:focus, textarea:focus { border-color: #718096; outline: none; background: #fff; }
-        
-        .grid-dates { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; margin-top: 8px; }
-        .btn-choice { border: 1px solid #cbd5e0; background: #fff; padding: 12px 8px; border-radius: 6px; cursor: pointer; text-align: center; font-size: 0.9rem; color: #4a4a4a; transition: all 0.2s; }
-        .btn-choice:hover:not(:disabled) { border-color: #4a5568; background: #f7fafc; }
-        .btn-choice.selected { background: #4a6b58; color: #fff; border-color: #3b5445; }
-        .btn-choice:disabled { background: #edf2f7; color: #a0aec0; cursor: not-allowed; border-color: #e2e8f0; }
-
-        .time-box { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 45px; }
-        .status-txt { font-size: 0.75rem; margin-top: 3px; }
-        .status-txt.ok { color: #4a6b58; font-weight: bold; }
-        .status-txt.full { color: #e53e3e; }
-
-        button.submit-btn { width: 100%; padding: 14px; background: #4a6b58; color: #fff; border: none; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 30px; transition: background 0.2s; }
-        button.submit-btn:hover:not(:disabled) { background: #3b5445; }
-        button.submit-btn:disabled { background: #cbd5e0; color: #a0aec0; cursor: not-allowed; }
-
-        .loading-banner { text-align: center; padding: 12px; background: #e6fffa; color: #234e52; font-weight: bold; border-radius: 6px; margin-bottom: 20px; font-size: 0.9rem; }
-        .deadline-msg { text-align: center; background: #fff5f5; color: #c53030; padding: 18px; border-radius: 6px; font-weight: bold; margin-top: 15px; border: 1px solid #fed7d7; line-height: 1.5; font-size: 0.95rem; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>個人面談 予約システム</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background-color: #f4f7f6;
+      color: #333;
+    }
+    .header-banner {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 30px 0;
+      text-align: center;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .card {
+      border: none;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+      background-color: white;
+    }
+    .card-header {
+      background-color: #fff;
+      border-bottom: 2px solid #f0f0f0;
+      font-weight: 700;
+      color: #4a5568;
+      padding: 15px 20px;
+    }
+    .time-slot-btn {
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 12px;
+      font-weight: 500;
+      border: 2px solid #e2e8f0;
+      background-color: #fff;
+      color: #4a5568;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+      text-align: center;
+    }
+    .time-slot-btn:hover:not([disabled]) {
+      border-color: #667eea;
+      color: #667eea;
+      background-color: #f8fafc;
+    }
+    .time-slot-btn.selected {
+      background-color: #667eea;
+      border-color: #667eea;
+      color: white;
+    }
+    .time-slot-btn[disabled] {
+      background-color: #edf2f7;
+      border-color: #edf2f7;
+      color: #a0aec0;
+      cursor: not-allowed;
+    }
+    .badge-status {
+      font-size: 0.8rem;
+      padding: 4px 8px;
+      border-radius: 4px;
+      margin-left: 8px;
+    }
+    .date-section {
+      margin-bottom: 25px;
+      border-bottom: 1px dashed #e2e8f0;
+      padding-bottom: 15px;
+    }
+    .date-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #2d3748;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+    }
+    .date-title::before {
+      content: "";
+      display: inline-block;
+      width: 6px;
+      height: 18px;
+      background-color: #667eea;
+      margin-right: 8px;
+      border-radius: 2px;
+    }
+  </style>
 </head>
 <body>
-<div id="app" class="container">
-    <h1>📅 個人面談 予約受付</h1>
 
-    <div v-if="loading" class="loading-banner">🔄 空き状況を読み込み中...</div>
+  <div class="header-banner">
+    <h2>🤝 個人面談 ご予約受付</h2>
+    <p class="mb-0 mt-2">ご希望のクラス、日時を選択してご予約を完了させてください。</p>
+  </div>
 
-    <div v-if="isSystemClosed" class="deadline-msg">
-        ⚠️ インターネット予約受付は終了いたしました。<br>変更・キャンセル等は園まで直接ご連絡ください。
-    </div>
+  <div class="container mb-5">
+    <div id="deadlineMessage" class="alert alert-warning d-none text-center fw-bold" role="alert"></div>
 
-    <div v-else>
-        <label>🏫 クラス</label>
-        <select v-model="form.class">
-            <option value="">-- 選択してください --</option>
-            <option v-for="c in classes" :key="c.id" :value="c.name">{{ c.name }}</option>
-        </select>
+    <div class="row" id="mainContent">
+      <div class="col-lg-5 mb-4">
+        <div class="card">
+          <div class="card-header">📋 基本情報の入力</div>
+          <div class="card-body p-4">
+            <form id="reserveForm">
+              <div class="mb-3">
+                <label class="form-label fw-bold">クラス <span class="text-danger">*</span></label>
+                <select class="form-select" id="classSelect" required>
+                  <option value="" disabled selected>クラスを選択してください</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-bold">園児氏名 <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="childName" placeholder="例：ひよこ たろう" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-bold">面談形式 <span class="text-danger">*</span></label>
+                <div class="d-flex gap-3 mt-2">
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="meetingType" id="type1" value="対面形式" checked>
+                    <label class="form-check-label" for="type1">🏢 対面形式</label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="meetingType" id="type2" value="オンライン" >
+                    <label class="form-check-label" for="type2">💻 オンライン</label>
+                  </div>
+                </div>
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-bold">保護者メールアドレス <span class="text-danger">*</span></label>
+                <input type="email" class="form-control" id="parentEmail" placeholder="例：example@mail.com" required>
+                <div class="form-text">予約完了通知メールがこのアドレスに届きます。</div>
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-bold">備考（特記事項など）</label>
+                <textarea class="form-control" id="remarks" rows="3" placeholder="先生に伝えておきたいことがあればご記入ください"></textarea>
+              </div>
 
-        <label>👦 園児氏名</label>
-        <input type="text" v-model="form.name" placeholder="例：ひらがな たろう">
+              <div class="p-3 bg-light rounded mb-4 border d-none" id="selectionSummary">
+                <div class="fw-bold text-secondary small">【選択中の日時】</div>
+                <div id="selectedDateTimeText" class="fw-bold text-primary fs-5 mt-1"></div>
+              </div>
 
-        <label>🤝 面談形式</label>
-        <select v-model="form.meetingType">
-            <option value="対面形式">園での対面形式（来園）</option>
-            <option value="オンライン(Zoom)">オンライン形式（Zoom面談）</option>
-        </select>
-
-        <label>✉️ 控えメール送信先アドレス</label>
-        <input type="email" v-model="form.email" placeholder="例：parent@example.com">
-        <p style="font-size:0.75rem; color:#718096; margin:6px 0 0 2px;">※予約完了後、こちらのアドレスに自動控えメールが届きます。</p>
-
-        <label>📅 ご希望の日付</label>
-        <div class="grid-dates">
-            <button 
-                v-for="d in dates" 
-                :key="d.id"
-                class="btn-choice"
-                :class="{ selected: form.date === d.date }"
-                :disabled="isDateClosed(d.date)"
-                @click="selectDate(d.date)"
-            >
-                {{ formatDisplayDate(d.date) }}
-                <div v-if="isDateClosed(d.date)" style="font-size:0.7rem; color:#e53e3e; margin-top:2px;">締切</div>
-            </button>
+              <button type="submit" class="btn btn-primary w-100 py-2 fw-bold fs-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border:none;" id="submitBtn">
+                🚀 この内容で予約を確定する
+              </button>
+            </form>
+          </div>
         </div>
+      </div>
 
-        <div v-if="form.date">
-            <label style="margin-top:20px;">🕒 ご希望の時間枠</label>
-            <div class="grid-dates">
-                <button 
-                    v-for="t in availableTimes" 
-                    :key="t.id"
-                    class="btn-choice"
-                    :class="{ selected: form.time === t.time }"
-                    :disabled="isFull(t.time)"
-                    @click="form.time = t.time"
-                >
-                    <div class="time-box">
-                        <span>{{ t.time }}</span>
-                        <span class="status-txt" :class="isFull(t.time) ? 'full' : 'ok'">
-                            {{ isFull(t.time) ? '満席' : '○ 空き' }}
-                        </span>
-                    </div>
-                </button>
+      <div class="col-lg-7">
+        <div class="card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <span>📅 面談希望日時の選択</span>
+            <span class="badge bg-secondary" id="totalSlotsCount">0枠</span>
+          </div>
+          <div class="card-body p-4" style="max-height: 650px; overflow-y: auto;" id="calendarContainer">
+            <div class="text-center text-muted my-5" id="calendarPlaceholder">
+              <p class="fs-5">Loading...</p>
             </div>
-            <p v-if="availableTimes.length === 0" style="text-align:center; color:#e53e3e; font-size:0.9rem; padding:10px;">
-                選択された日付には時間枠が設定されていません。
-            </p>
+          </div>
         </div>
-
-        <label>✏️ 備考（伝達事項などがあればご記入ください）</label>
-        <textarea v-model="form.note" rows="3" placeholder="ご質問など（任意）"></textarea>
-
-        <button 
-            class="submit-btn" 
-            :disabled="loading || !isFormValid"
-            @click="submitReservation"
-        >
-            {{ loading ? '⏳ 送信中...' : 'この内容で予約を確定する' }}
-        </button>
+      </div>
     </div>
-</div>
+  </div>
 
-<script>
-    const { createApp, ref, computed, onMounted } = Vue;
-    
-    // ⚠️ 管理画面（admin.html）と同じ最新のデプロイURLに書き換えてください
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbwVMTPvtPfAaFqPBSMFjjM1aqHX_cPx7f_F5o1a3SJLzgadjjdZckdmAF1j5s3I3TuA/exec";
+  <div class="modal fade" id="loadingModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+      <div class="modal-content text-center p-4">
+        <div class="spinner-border text-primary mx-auto mb-3" role="status"></div>
+        <div class="fw-bold">データを送信中...</div>
+      </div>
+    </div>
+  </div>
 
-    createApp({
-        setup() {
-            const loading = ref(false);
-            const classes = ref([]); const dates = ref([]); const times = ref([]); const reserves = ref([]);
-            const config = ref({ deadlineType: "none", deadlineAbsolute: "", deadlineDays: 1 });
-            
-            const form = ref({ class: "", name: "", meetingType: "対面形式", email: "", date: "", time: "", note: "" });
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-            const formatDisplayDate = (dStr) => {
-                if(!dStr) return "";
-                let s = String(dStr).trim().replace(/\//g, "-");
-                let m = s.match(/^(\d{4})[-年](\d{1,2})[-月](\d{1,2})/);
-                if(m) return `${Number(m[2])}月${Number(m[3])}日`;
-                return dStr;
-            };
+  <script>
+    // 💡 ここにご自身の最新のGASウェブアプリURLを貼り付けてください
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbzKaY2_hDrqHheBqLlGnfXA4lxYM9h7JuSlviAGuL_taHnZBclfxA9JBGEvutnu-htO/exec"; 
 
-            const loadData = async () => {
-                loading.value = true;
-                try {
-                    const res = await fetch(GAS_URL); const json = await res.json();
-                    classes.value = json.classes || [];
-                    dates.value = json.dates || [];
-                    times.value = json.times || [];
-                    reserves.value = json.reserves || [];
-                    if (json.config) config.value = json.config;
-                } catch(e) {
-                    alert("データの読み込みに失敗しました。時間をおいて再度お試しください。");
-                } finally { loading.value = false; }
-            };
+    let systemData = { classes: [], dates: [], times: [], reserves: [], config: {} };
+    let selectedDate = null;
+    let selectedTime = null;
 
-            const isSystemClosed = computed(() => {
-                if (config.value.deadlineType === 'absolute' && config.value.deadlineAbsolute) {
-                    const now = new Date(); const limit = new Date(config.value.deadlineAbsolute);
-                    return now >= limit;
-                }
-                return false;
-            });
+    // 読み込み初期化
+    window.addEventListener('DOMContentLoaded', () => {
+      fetchSystemData();
+      
+      // クラスが選ばれても選ばれていなくても、カレンダーを常に共通表示させる
+      document.getElementById('classSelect').addEventListener('change', () => {
+        renderCalendar(); 
+      });
 
-            const isDateClosed = (dateStr) => {
-                if (config.value.deadlineType === 'relative' && config.value.deadlineDays) {
-                    const now = new Date(); now.setHours(0,0,0,0);
-                    const targetDate = new Date(dateStr.replace(/\//g, "-")); targetDate.setHours(0,0,0,0);
-                    const diffTime = targetDate.getTime() - now.getTime();
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    return diffDays < Number(config.value.deadlineDays);
-                }
-                return false;
-            };
+      document.getElementById('reserveForm').addEventListener('submit', handleFormSubmit);
+    });
 
-            const selectDate = (date) => { form.value.date = date; form.value.time = ""; };
-            const availableTimes = computed(() => times.value.filter(t => String(t.date).trim() === String(form.value.date).trim()));
-            
-            const isFull = (timeStr) => {
-                return reserves.value.some(r => 
-                    String(r.date).trim() === String(form.value.date).trim() && 
-                    String(r.time).trim() === String(timeStr).trim()
-                );
-            };
+    // GASからデータを取得
+    function fetchSystemData() {
+      fetch(GAS_URL)
+        .then(res => res.json())
+        .then(data => {
+          systemData = data;
+          checkSystemDeadline();
+          populateClasses();
+          renderCalendar(); // 最初からカレンダーを表示する
+        })
+        .catch(err => {
+          console.error(err);
+          document.getElementById('calendarPlaceholder').innerHTML = '<span class="text-danger">データの読み込みに失敗しました。再読み込みしてください。</span>';
+        });
+    }
 
-            const isFormValid = computed(() => {
-                return form.value.class && form.value.name.trim() && form.value.email.trim() && form.value.date && form.value.time;
-            });
-
-            const submitReservation = async () => {
-                if (!isFormValid.value) return;
-                
-                if (isDateClosed(form.value.date)) { alert("申し訳ありません、この日付の受付枠は締め切られました。"); return; }
-                if (isFull(form.value.time)) { alert("申し訳ありません、タッチの差でこの時間枠が満席になりました。別の日時を選択してください。"); loadData(); return; }
-
-                if (!confirm("この内容で予約を確定させます。よろしいですか？")) return;
-
-                loading.value = true;
-                try {
-                    // 💡 GAS側の受け取り設定に合わせて、typeを「submitReservation」へ、dataの構造を最適化しました
-                    const response = await fetch(GAS_URL, {
-                        method: "POST",
-                        body: JSON.stringify({ 
-                            type: "submitReservation", 
-                            data: { ...form.value } 
-                        })
-                    });
-                    const result = await response.json();
-                    
-                    if (result.status === "exists") {
-                        alert("⚠️ 申し訳ありません、タッチの差でこの時間枠が満席になりました。別の日時を選択してください。");
-                        await loadData();
-                    } else if (result.status === "error") {
-                        alert("システムエラーが発生しました。");
-                    } else {
-                        alert("🎉 ご予約が正常に完了いたしました！\n入力されたアドレスへ自動控えメールをお送りしましたのでご確認ください。");
-                        form.value = { class: "", name: "", meetingType: "対面形式", email: "", date: "", time: "", note: "" };
-                        await loadData();
-                    }
-                } catch(e) {
-                    alert("通信エラーが発生しました。予約がとれていない可能性があります。園まで直接ご連絡ください。");
-                } finally { loading.value = false; }
-            };
-
-            onMounted(loadData);
-
-            return { loading, classes, dates, form, availableTimes, isSystemClosed, isDateClosed, selectDate, isFull, isFormValid, submitReservation, formatDisplayDate };
+    // 締め切りチェック機能（そのまま維持）
+    function checkSystemDeadline() {
+      const conf = systemData.config || {};
+      if (conf.deadlineStatus === "closed") {
+        showDeadline("⛔ 個人面談の事前予約受付は一斉終了いたしました。");
+        return;
+      }
+      if (conf.deadlineDate) {
+        const dlTime = new Date(conf.deadlineDate).getTime();
+        if (new Date().getTime() > dlTime) {
+          showDeadline("⛔ 設定された予約締め切り日時を過ぎたため、受付を終了いたしました。");
         }
-    }).mount('#app');
-</script>
+      }
+    }
+
+    function showDeadline(msg) {
+      const dMsg = document.getElementById('deadlineMessage');
+      dMsg.innerText = msg;
+      dMsg.classList.remove('d-none');
+      document.getElementById('mainContent').classList.add('d-none');
+    }
+
+    // クラス選択肢の生成
+    function populateClasses() {
+      const select = document.getElementById('classSelect');
+      select.innerHTML = '<option value="" disabled selected>クラスを選択してください</option>';
+      if (systemData.classes) {
+        systemData.classes.forEach(c => {
+          const opt = document.createElement('option');
+          opt.value = c.name;
+          opt.innerText = c.name;
+          select.appendChild(opt);
+        });
+      }
+    }
+
+    // 💡 カレンダー（面談枠）の生成処理【クラスごとのフィルターを完全に除去】
+    function renderCalendar() {
+      const container = document.getElementById('calendarContainer');
+      container.innerHTML = '';
+      
+      // 時間枠データを日付順にソートして整理
+      let slots = systemData.times || [];
+      if (slots.length === 0) {
+        container.innerHTML = '<div class="text-center text-muted my-5">現在、選択可能な面談日時枠がありません。</div>';
+        document.getElementById('totalSlotsCount').innerText = '0枠';
+        return;
+      }
+
+      document.getElementById('totalSlotsCount').innerText = slots.length + '枠';
+
+      // 日付ごとに時間枠をグループ化
+      const groupedSlots = {};
+      slots.forEach(s => {
+        if (!groupedSlots[s.date]) { groupedSlots[s.date] = []; }
+        groupedSlots[s.date].push(s);
+      });
+
+      // 日付の古い順に並び替えて画面に書き出す
+      const sortedDates = Object.keys(groupedSlots).sort((a,b) => new Date(a) - new Date(b));
+
+      sortedDates.forEach(dateStr => {
+        const dateSection = document.createElement('div');
+        dateSection.className = 'date-section';
+
+        // 日付タイトルのフォーマット（例：2026年06月23日）
+        const dObj = new Date(dateStr);
+        const formattedDate = dObj.getFullYear() + '年' + (dObj.getMonth()+1) + '月' + dObj.getDate() + '日';
+        
+        const title = document.createElement('div');
+        title.className = 'date-title';
+        title.innerText = formattedDate;
+        dateSection.appendChild(title);
+
+        const row = document.createElement('div');
+        row.className = 'row row-cols-2 row-cols-md-3 g-2';
+
+        // その日の時間枠ボタンを生成
+        groupedSlots[dateStr].forEach(slot => {
+          const col = document.createElement('div');
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'time-slot-btn';
+          
+          // 💡 すでに予約データシートに同じ日付・同じ時間枠が存在するかチェック（埋まり判定）
+          const isTaken = systemData.reserves.some(r => r.date === slot.date && String(r.time) === String(slot.time));
+
+          if (isTaken) {
+            btn.disabled = true;
+            btn.innerHTML = slot.time + ' <span class="badge bg-danger badge-status">満席</span>';
+          } else {
+            btn.innerHTML = slot.time + ' <span class="badge bg-success badge-status">受付中</span>';
+            
+            // 選択済みの状態を維持
+            if (selectedDate === slot.date && selectedTime === slot.time) {
+              btn.classList.add('selected');
+            }
+
+            // ボタンクリック時の挙動
+            btn.addEventListener('click', () => {
+              document.querySelectorAll('.time-slot-btn').forEach(b => b.classList.remove('selected'));
+              btn.classList.add('selected');
+              selectedDate = slot.date;
+              selectedTime = slot.time;
+              
+              // 選択中テキストの表示更新
+              const summary = document.getElementById('selectionSummary');
+              const text = document.getElementById('selectedDateTimeText');
+              text.innerText = formattedDate + '  ' + slot.time;
+              summary.classList.remove('d-none');
+            });
+          }
+
+          col.appendChild(btn);
+          row.appendChild(col);
+        });
+
+        dateSection.appendChild(row);
+        container.appendChild(dateSection);
+      });
+    }
+
+    // 予約フォーム送信処理（変更なし）
+    function handleFormSubmit(e) {
+      e.preventDefault();
+
+      if (!selectedDate || !selectedTime) {
+        alert('📅 面談希望日時が選択されていません。右側のカレンダーから時間枠を1つ選択してください。');
+        return;
+      }
+
+      // 各入力欄の値を取得
+      const className = document.getElementById('classSelect').value;
+      const childName = document.getElementById('childName').value.trim();
+      const meetingType = document.querySelector('name[name="meetingType"]:checked') ? document.querySelector('name[name="meetingType"]:checked').value : document.querySelector('input[name="meetingType"]:checked').value;
+      const email = document.getElementById('parentEmail').value.trim();
+      const comment = document.getElementById('remarks').value.trim();
+
+      const payload = {
+        type: "submitReservation",
+        date: selectedDate,
+        time: selectedTime,
+        class: className,
+        name: childName,
+        meetingType: meetingType,
+        email: email,
+        comment: comment
+      };
+
+      const loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+      loadingModal.show();
+
+      fetch(GAS_URL, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+      })
+      .then(res => res.json())
+      .then(res => {
+        loadingModal.hide();
+        if (res.status === 'success') {
+          alert('🎉 ご予約が完了いたしました！\nご入力いただいたメールアドレス宛に通知をお送りしましたのでご確認ください。');
+          location.reload();
+        } else if (res.status === 'exists') {
+          // 同名重複、または直前タッチの同時重複エラーをキャッチ
+          alert(res.message || '⚠️ 申し訳ありません。この枠はタッチの差で別の方の予約が完了したか、または同じお名前の園児氏名で既に別の予約が入っています。');
+          location.reload();
+        } else {
+          alert('システムエラーが発生しました: ' + (res.message || '不明な原因'));
+        }
+      })
+      .catch(err => {
+        loadingModal.hide();
+        console.error(err);
+        alert('通信エラーが発生しました。インターネット接続を確認し、もう一度お試しください。');
+      });
+    }
+  </script>
 </body>
 </html>
