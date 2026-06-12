@@ -118,7 +118,8 @@
 <script>
     const { createApp, ref, computed, onMounted } = Vue;
     
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbzGx3g7NjT54AAu-AXTELoIsq-ticKbwGtiFRsyd2JHFSG74xJlDc0eOEQZPwOe31qB/exec";
+    // ⚠️ 管理画面（admin.html）と同じ最新のデプロイURLに書き換えてください
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbxGyyWhwFzfwlFhyY6MF9Y2eaBJu75QWtx5-89Jy5RxrXUdBjFztJDsSveHby6n0_-k/exec";
 
     createApp({
         setup() {
@@ -193,17 +194,21 @@
 
                 loading.value = true;
                 try {
+                    // 💡 GAS側の受け取り設定に合わせて、typeを「submitReservation」へ、dataの構造を最適化しました
                     const response = await fetch(GAS_URL, {
                         method: "POST",
-                        body: JSON.stringify({ type: "addReservation", ...form.value })
+                        body: JSON.stringify({ 
+                            type: "submitReservation", 
+                            data: { ...form.value } 
+                        })
                     });
                     const result = await response.json();
                     
-                    if (result.status === "name_exists") {
-                        alert("⚠️ このお子様のお名前は、既に他の枠で面談予約が完了しています。\n重複して登録することはできません。変更がある場合は園までご連絡ください。");
-                    } else if (result.status === "full") {
-                        alert("申し訳ありません、指定の枠は満席になりました。");
+                    if (result.status === "exists") {
+                        alert("⚠️ 申し訳ありません、タッチの差でこの時間枠が満席になりました。別の日時を選択してください。");
                         await loadData();
+                    } else if (result.status === "error") {
+                        alert("システムエラーが発生しました。");
                     } else {
                         alert("🎉 ご予約が正常に完了いたしました！\n入力されたアドレスへ自動控えメールをお送りしましたのでご確認ください。");
                         form.value = { class: "", name: "", meetingType: "対面形式", email: "", date: "", time: "", note: "" };
